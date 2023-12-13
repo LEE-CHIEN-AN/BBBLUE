@@ -7,7 +7,7 @@
 #include <ctime>
 using namespace std;
 
-
+int Length = 15, Width = 15;
 
 ///---------------------------
 
@@ -152,9 +152,9 @@ int arr[15][15] = {0};
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc = GetDC(hwnd);
-    const wchar_t* text;
-    //HFONT hFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
-    //SelectObject(hdc, hFont);
+    wchar_t* text;
+    HFONT hFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
+    SelectObject(hdc, hFont);
     text = L"Please choose small (press 1), medium (press 2), or large (press 3).";
     TextOutW(hdc, 10, 10, text, wcslen(text));
     ReleaseDC(hwnd, hdc);  // 釋放裝置內文
