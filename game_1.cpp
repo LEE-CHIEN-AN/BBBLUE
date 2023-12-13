@@ -147,7 +147,8 @@ bool isInitialDrawDone = false;
 
 int currentPlayer = 1;
 
-int arr[15][15] = {0};
+int passing_arr_p1[16][16] = {0};
+int passing_arr_p2[16][16] = {0};
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -165,6 +166,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg) {
         case WM_PAINT:
         {
+            passing_arr_p1[1][1] = 1;
+            passing_arr_p2[15][15] = 1;
+
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
@@ -230,56 +234,56 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 switch (wParam)
                 {
                     case VK_UP:
-                        if(p1_y > 1 && arr[p1_x][p1_y - 1] == 0)
+                        if(p1_y > 1 && passing_arr_p1[p1_x][p1_y - 1] == 0)
                         {
                             cout << "up" << endl;
                             p1_y -= 1;
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            arr[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_x][p1_y] = 1;
                             break;
                         }
                         else break;
 
 
                     case VK_DOWN:
-                        if(p1_y < 15 && arr[p1_x][p1_y + 1] == 0)
+                        if(p1_y < 15 && passing_arr_p1[p1_x][p1_y + 1] == 0)
                         {
                             cout << "down" << endl;
                             p1_y += 1;
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            arr[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_x][p1_y] = 1;
                             break;
                         }
                         else break;
 
 
                     case VK_LEFT:
-                        if(p1_x > 1 && arr[p1_x - 1][p1_y] == 0)
+                        if(p1_x > 1 && passing_arr_p1[p1_x - 1][p1_y] == 0)
                         {
                             cout << "left" << endl;
                             p1_x -= 1;
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            arr[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_x][p1_y] = 1;
                             break;
                         }
                         else break;
 
 
                     case VK_RIGHT:
-                        if(p1_x < 15 && arr[p1_x + 1][p1_y] == 0)
+                        if(p1_x < 15 && passing_arr_p1[p1_x + 1][p1_y] == 0)
                         {
                             cout << "right" << endl;
                             p1_x += 1;
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            arr[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_x][p1_y] = 1;
                             break;
                         }
                         else break;
@@ -306,51 +310,55 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 switch (wParam)
                 {
                     case 'W':
-                        if(p2_y > 1)
+                        if(p2_y > 1 && passing_arr_p2[p2_x][p2_y - 1] == 0)
                         {
                             cout << "W pressed" << endl;
                             p2_y -= 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
+                            passing_arr_p2[p2_x][p2_y] = 1;
                             break;
                         }
                         else break;
 
                     case 'S':
-                        if(p2_y < 15)
+                        if(p2_y < 15 && passing_arr_p2[p2_x][p2_y + 1] == 0)
                         {
                             cout << "S pressed" << endl;
                             p2_y += 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
+                            passing_arr_p2[p2_x][p2_y] = 1;
                             break;
                         }
                         else break;
 
 
                     case 'A':
-                        if(p2_x > 1)
+                        if(p2_x > 1 && passing_arr_p2[p2_x - 1][p2_y] == 0)
                         {
                             cout << "A pressed" << endl;
                             p2_x -= 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
+                            passing_arr_p2[p2_x][p2_y] = 1;
                             break;
                         }
                         else break;
 
 
                     case 'D':
-                        if(p2_x < 15)
+                        if(p2_x < 15 && passing_arr_p2[p2_x + 1][p2_y] == 0)
                         {
                             cout << "D pressed" << endl;
                             p2_x += 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
+                            passing_arr_p2[p2_x][p2_y] = 1;
                             break;
                         }
                         else break;
@@ -380,6 +388,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     rect = {p2_x * 50 + 20, p2_y * 50 + 20, (p2_x + 1) * 50 - 20, (p2_y + 1) * 50 - 20};
                     FillRect(hdc, &rect, blueBrush);
                     currentPlayer = 1;
+
+                    for(int i = 1 ; i < 16 ; i++)
+                    {
+                        for(int j = 1 ; j < 16 ; j++)
+                        {
+                            passing_arr_p1[i][j] = 0;
+                            passing_arr_p2[i][j] = 0;
+                        }
+                    }
+
+                    passing_arr_p1[p1_x][p1_y] = 1;
+                    passing_arr_p2[p2_x][p2_y] = 1;
                 }
             }
 
