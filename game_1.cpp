@@ -7,29 +7,30 @@
 #include <ctime>
 using namespace std;
 
-int Length = 15, Width = 15;
+int Length = 15, Width = 5; // 定義地圖的長度和寬度
 
-///---------------------------
-
-//方格的種類
+// 方格的種類
 enum TileType {
-    GRASS,
-    WATER,
-    ROCK
+    GRASS, // 草地
+    WATER, // 水域
+    ROCK   // 岩石
 };
+
 struct Vector{
     int x;
     int y;
 };
 
+// 生成隨機數字的函數
 int generateRandomNumber(int minValue, int maxValue) {
     return rand() % (maxValue - minValue + 1) + minValue;
 }
 
-//這是個別的方格
+#pragma region Tile// Tile 類別代表地圖上的單個方格
 class Tile {
 private:
-    TileType type;
+    TileType type; // 方格的類型
+
 public:
     Tile(TileType type){
         this->type = type;
@@ -40,23 +41,23 @@ public:
     }
     void setTile(TileType type){
         this->type = type;
-        return;
     }
 };
+#pragma endregion
 
-//生成地圖
+#pragma region TileMap// TileMap 類別代表整個地圖
 class TileMap {
 private:
-    int width;
-    int length;
-    int obstacleCnt;
-    Tile*** TileMapObject;
+    int width;       // 地圖寬度
+    int length;      // 地圖長度
+    Tile*** TileMapObject; // 二維陣列，儲存地圖上的每個方格
+
 public:
     TileMap(int width, int length){
         this->width = width;
         this->length = length;
-        this->obstacleCnt = 0.1*(length*width);
 
+        // 初始化地圖陣列
         TileMapObject = new Tile** [length];
         for (int i = 0; i < length; i++){
             TileMapObject[i] = new Tile* [width];
@@ -67,6 +68,7 @@ public:
         srand(static_cast<unsigned>(time(0)));
     }
     ~TileMap() {
+        // 清理記憶體
         for (int i = 0; i < length; i++) {
             for (int j = 0; j < width; j++) {
                 delete TileMapObject[i][j];
@@ -76,14 +78,17 @@ public:
         delete[] TileMapObject;
     }
 
+    // 獲取指定位置的方格類型
     TileType getTileType(int x, int y) const {
-            return TileMapObject[y][x]->getTile();
-        }
+        return TileMapObject[y][x]->getTile();
+    }
 
+    // 設置指定位置的方格類型
     void setTileType(int x, int y, TileType type) {
-            TileMapObject[y][x]->setTile(type);
-        }
+        TileMapObject[y][x]->setTile(type);
+    }
 
+    // 打印地圖到控制台
     void printTileMap() const {
         for (int i = 0; i < length; i++) {
             for (int j = 0; j < width; j++) {
@@ -94,14 +99,16 @@ public:
                         cout << " 2 "; break;
                     case ROCK:
                         cout << " 3 "; break;
-                    }
                 }
-                cout << endl;
             }
+            cout << endl;
         }
+    }
+
+    // 生成水域
     void generateWaterMass() {
-        int waterMassWidth = rand() % 3 + 2; // 在[2,4]之間取一個隨機數字當水池寬度
-        int waterMassLength = rand() % 3 + 2;
+        int waterMassWidth = rand() % 3 + 2; // 水域寬度
+        int waterMassLength = rand() % 3 + 2; // 水域長度
 
         int startX = rand() % (width - waterMassWidth + 1);
         int startY = rand() % (length - waterMassLength + 1);
@@ -115,12 +122,14 @@ public:
             }
         }
     }
+
+    // 隨機生成岩石
     void randomRocks(int rockCnt) {
         for (int i = 0; i < rockCnt; i++) {
             int x = rand() % width;
             int y = rand() % length;
 
-            //檢查這個方格是不是GRASS 是的話才設定為ROCK
+            // 只有當方格是草地時，才設置為岩石
             if (getTileType(x, y) == GRASS) {
                 setTileType(x, y, ROCK);
             } else {
@@ -129,8 +138,9 @@ public:
         }
     }
 };
+#pragma endregion
 
-int mapArray[16][16] = {0};
+int** mapArray; // 儲存地圖數據的陣列
 
 ///---------------------------
 
@@ -141,21 +151,22 @@ int cnt_UpDown_player2 = 100;
 int cnt_LeftRight_player2 = 100;
 
 int p1_x = 1, p1_y = 1, p1_moves = 3;
-int p2_x = 15, p2_y = 15, p2_moves = 3;
+int p2_x = Length, p2_y = Width, p2_moves = 3;
 
 bool isInitialDrawDone = false;
 
 int currentPlayer = 1;
 
-int passing_arr_p1[16][16] = {0};
-int passing_arr_p2[16][16] = {0};
+int** passing_arr_p1;
+int** passing_arr_p2;
 
+#pragma region WindowProc
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc = GetDC(hwnd);
-    wchar_t* text;
-    HFONT hFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
-    SelectObject(hdc, hFont);
+    const wchar_t* text;
+    //HFONT hFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
+    //SelectObject(hdc, hFont);
     text = L"Please choose small (press 1), medium (press 2), or large (press 3).";
     TextOutW(hdc, 10, 10, text, wcslen(text));
     ReleaseDC(hwnd, hdc);  // 釋放裝置內文
@@ -167,7 +178,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_PAINT:
         {
             passing_arr_p1[1][1] = 1;
-            passing_arr_p2[15][15] = 1;
+            passing_arr_p2[Width][Length] = 1;
 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -180,20 +191,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             // Check if initial drawing is done
             if (!isInitialDrawDone) {
-                // Draw the black rectangles here
-                for (int i = 1; i <= 15; i++) {
-                    for (int j = 1; j <= 15; j++) {
+                // Draw the balack rectangles here
+                for (int i = 1; i <= Length; i++) {
+                    for (int j = 1; j <= Width; j++) {
                         RECT rect = {i * 50, j * 50, (i + 1) * 50, (j + 1) * 50};
-                        if(mapArray[i][j] == 1) FillRect(hdc, &rect, grassBrush);
-                        else if(mapArray[i][j] == 2) FillRect(hdc, &rect, waterBrush);
-                        else if(mapArray[i][j] == 3) FillRect(hdc, &rect, rockBrush);
+                        if(mapArray[j][i] == 1) FillRect(hdc, &rect, grassBrush);
+                        else if(mapArray[j][i] == 2) FillRect(hdc, &rect, waterBrush);
+                        else if(mapArray[j][i] == 3) FillRect(hdc, &rect, rockBrush);
                     }
                 }
                 RECT rect;
                 rect = {1 * 50, 1 * 50, (1 + 1) * 50, (1 + 1) * 50};
                 FillRect(hdc, &rect, redBrush);
 
-                rect = {15 * 50, 15 * 50, (15 + 1) * 50, (15 + 1) * 50};
+                rect = {Length * 50, Width * 50, (Length + 1) * 50, (Width + 1) * 50};
                 FillRect(hdc, &rect, blueBrush);
 
                 isInitialDrawDone = true;
@@ -241,49 +252,49 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            passing_arr_p1[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_y][p1_x] = 1;
                             break;
                         }
                         else break;
 
 
                     case VK_DOWN:
-                        if(p1_y < 15 && passing_arr_p1[p1_x][p1_y + 1] == 0)
+                        if(p1_y < Width && passing_arr_p1[p1_y + 1][p1_x] == 0)
                         {
                             cout << "down" << endl;
                             p1_y += 1;
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            passing_arr_p1[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_y][p1_x] = 1;
                             break;
                         }
                         else break;
 
 
                     case VK_LEFT:
-                        if(p1_x > 1 && passing_arr_p1[p1_x - 1][p1_y] == 0)
+                        if(p1_x > 1 && passing_arr_p1[p1_y][p1_x - 1] == 0)
                         {
                             cout << "left" << endl;
                             p1_x -= 1;
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            passing_arr_p1[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_y][p1_x] = 1;
                             break;
                         }
                         else break;
 
 
                     case VK_RIGHT:
-                        if(p1_x < 15 && passing_arr_p1[p1_x + 1][p1_y] == 0)
+                        if(p1_x < Length && passing_arr_p1[p1_y][p1_x + 1] == 0)
                         {
                             cout << "right" << endl;
                             p1_x += 1;
                             rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
                             FillRect(hdc, &rect, redBrush);
                             p1_moves--;
-                            passing_arr_p1[p1_x][p1_y] = 1;
+                            passing_arr_p1[p1_y][p1_x] = 1;
                             break;
                         }
                         else break;
@@ -310,55 +321,55 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 switch (wParam)
                 {
                     case 'W':
-                        if(p2_y > 1 && passing_arr_p2[p2_x][p2_y - 1] == 0)
+                        if(p2_y > 1 && passing_arr_p2[p2_y - 1][p2_x] == 0)
                         {
                             cout << "W pressed" << endl;
                             p2_y -= 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
-                            passing_arr_p2[p2_x][p2_y] = 1;
+                            passing_arr_p2[p2_y][p2_x] = 1;
                             break;
                         }
                         else break;
 
                     case 'S':
-                        if(p2_y < 15 && passing_arr_p2[p2_x][p2_y + 1] == 0)
+                        if(p2_y < Width && passing_arr_p2[p2_y + 1][p2_x] == 0)
                         {
                             cout << "S pressed" << endl;
                             p2_y += 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
-                            passing_arr_p2[p2_x][p2_y] = 1;
+                            passing_arr_p2[p2_y][p2_x] = 1;
                             break;
                         }
                         else break;
 
 
                     case 'A':
-                        if(p2_x > 1 && passing_arr_p2[p2_x - 1][p2_y] == 0)
+                        if(p2_x > 1 && passing_arr_p2[p2_y][p2_x - 1] == 0)
                         {
                             cout << "A pressed" << endl;
                             p2_x -= 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
-                            passing_arr_p2[p2_x][p2_y] = 1;
+                            passing_arr_p2[p2_y][p2_x] = 1;
                             break;
                         }
                         else break;
 
 
                     case 'D':
-                        if(p2_x < 15 && passing_arr_p2[p2_x + 1][p2_y] == 0)
+                        if(p2_x < Length && passing_arr_p2[p2_y][p2_x + 1] == 0)
                         {
                             cout << "D pressed" << endl;
                             p2_x += 1;
                             rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
                             FillRect(hdc, &rect, blueBrush);
                             p2_moves--;
-                            passing_arr_p2[p2_x][p2_y] = 1;
+                            passing_arr_p2[p2_y][p2_x] = 1;
                             break;
                         }
                         else break;
@@ -370,16 +381,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 FillRect(hdc, &rect, whiteBrush);
                 if(p2_moves == 0)
                 {
+                    /*PAINTSTRUCT ps;
+                    HDC hdc = BeginPaint(hwnd, &ps);*/
+
+                    HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
+                    HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
+                    HBRUSH grassBrush = CreateSolidBrush(RGB(0, 201, 87));
+                    HBRUSH waterBrush = CreateSolidBrush(RGB(0, 255, 255));
+                    HBRUSH rockBrush = CreateSolidBrush(RGB(192, 192, 192));
                     // Switch turns after a move
                     isInitialDrawDone = 0;
                     // Reset moves for the next player
                     p1_moves = 3;
                     p2_moves = 3;
                     // Draw the black rectangles here
-                    for (int i = 1; i <= 15; i++) {
-                        for (int j = 1; j <= 15; j++) {
+                    
+                    for (int i = 1; i <= Length; i++) {
+                        for (int j = 1; j <= Width; j++) {
                             RECT rect = {i * 50, j * 50, (i + 1) * 50, (j + 1) * 50};
-                            FillRect(hdc, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
+                            if(mapArray[j][i] == 1) FillRect(hdc, &rect, grassBrush);
+                            else if(mapArray[j][i] == 2) FillRect(hdc, &rect, waterBrush);
+                            else if(mapArray[j][i] == 3) FillRect(hdc, &rect, rockBrush);
                         }
                     }
                     rect = {p1_x * 50 + 20, p1_y * 50 + 20, (p1_x + 1) * 50 - 20, (p1_y + 1) * 50 - 20};
@@ -389,17 +411,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     FillRect(hdc, &rect, blueBrush);
                     currentPlayer = 1;
 
-                    for(int i = 1 ; i < 16 ; i++)
+                    for(int i = 1 ; i <= Width ; i++)
                     {
-                        for(int j = 1 ; j < 16 ; j++)
+                        for(int j = 1 ; j <= Length ; j++)
                         {
                             passing_arr_p1[i][j] = 0;
                             passing_arr_p2[i][j] = 0;
                         }
                     }
 
-                    passing_arr_p1[p1_x][p1_y] = 1;
-                    passing_arr_p2[p2_x][p2_y] = 1;
+                    passing_arr_p1[p1_y][p1_x] = 1;
+                    passing_arr_p2[p2_y][p2_x] = 1;
                 }
             }
 
@@ -417,15 +439,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
+#pragma endregion
 
 int main()
 {
     ///--------------------------------
+    mapArray = new int*[Width + 1];
+    passing_arr_p1 = new int*[Width + 1];
+    passing_arr_p2 = new int*[Width + 1];
+    for (int i = 0; i < Width + 1; i++) {
+        mapArray[i] = new int[Length + 1];
+        passing_arr_p1[i] = new int[Length + 1];
+        passing_arr_p2[i] = new int [Length + 1];
+        for (int j = 0; j < Length + 1; j++) {
+            mapArray[i][j] = 0; // 初始化陣列值為 0
+            passing_arr_p1[i][j] = 0;
+            passing_arr_p2[i][j] = 0;
+        }
+    }
     //建立地圖
-    TileMap myTileMap(16, 16);
+    TileMap myTileMap(Length + 1, Width + 1);
 
-    for (int i = 1; i <= 15; i++) {
-        for (int j = 1; j <= 15; j++) {
+    for (int i = 1; i <= Width; i++) {
+        for (int j = 1; j <= Length; j++) {
             myTileMap.setTileType(j, i, GRASS);
         }
     }
@@ -443,19 +479,19 @@ int main()
     //cout << rockCnt << endl;
     myTileMap.randomRocks(rockCnt);
 
-    for (int i = 1; i <= 15; i++){
-        for (int j = 1; j <= 15; j++){
-            if (i == 1 || i == 15)
+    for (int i = 1; i <= Width; i++){
+        for (int j = 1; j <= Length; j++){
+            if (i == 1 || i == Width)
                 myTileMap.setTileType(j, i, GRASS);
-            if (j == 1 || j == 15)
+            if (j == 1 || j == Length)
                 myTileMap.setTileType(j, i, GRASS);
         }
     }
 
     myTileMap.printTileMap();
 
-    for (int i = 1; i <= 15; i++) {
-            for (int j = 1; j <= 15; j++) {
+    for (int i = 1; i <= Width; i++) {
+            for (int j = 1; j <= Length; j++) {
                 switch (myTileMap.getTileType(j, i)) {
                     case GRASS:
                         mapArray[i][j] = 1;
@@ -469,8 +505,8 @@ int main()
                 }
             }
         }
-    for (int i = 1; i <= 15; i++) {
-            for (int j = 1; j <= 15; j++) {
+    for (int i = 1; i <= Width; i++) {
+            for (int j = 1; j <= Length; j++) {
                 cout << mapArray[i][j] << " ";
             }
             cout << endl;
@@ -507,5 +543,14 @@ int main()
     // 恢復編譯器警告設定
     #pragma GCC diagnostic pop
 
+    // 在程序結束前釋放記憶體
+    for (int i = 0; i < Width + 1; i++) {
+        delete[] mapArray[i];
+        delete[] passing_arr_p1[i];
+        delete[] passing_arr_p2[i];
+    }
+    delete[] mapArray;
+    delete[] passing_arr_p1;
+    delete[] passing_arr_p2;
     return 0;
 }
