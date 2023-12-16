@@ -5,9 +5,30 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 using namespace std;
 
-int Length = 15, Width = 5; // 定義地圖的長度和寬度
+
+int Length = 15, Width = 10; // 定義地圖的長度和寬度
+HICON hIcon_player1 = (HICON)LoadImage(NULL, L"JNG (2).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_player2 = (HICON)LoadImage(NULL, L"HCR (2).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_grass = (HICON)LoadImage(NULL, L"grass_try.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_water = (HICON)LoadImage(NULL, L"water_try.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_rock = (HICON)LoadImage(NULL, L"rock_try.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_flag = (HICON)LoadImage(NULL, L"flag.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_location = (HICON)LoadImage(NULL, L"location.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_des = (HICON)LoadImage(NULL, L"snowman (1).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+
+// Brushes
+HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
+HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
+HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
+HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+HBRUSH grassBrush = CreateSolidBrush(RGB(0, 201, 87));
+HBRUSH waterBrush = CreateSolidBrush(RGB(0, 255, 255));
+HBRUSH rockBrush = CreateSolidBrush(RGB(192, 192, 192));
+
+///--------------------------
 
 // 方格的種類
 enum TileType {
@@ -150,31 +171,148 @@ int cnt_LeftRight = 0;
 int cnt_UpDown_player2 = 100;
 int cnt_LeftRight_player2 = 100;
 
-int p1_x = 1, p1_y = 1, p1_moves = 3;
-int p2_x = Length, p2_y = Width, p2_moves = 3;
+int p1_x = 1, p1_y = 1, p1_moves = generateRandomNumber(2, 6);
+int p2_x = Length, p2_y = Width, p2_moves = generateRandomNumber(2, 6);
 
 bool isInitialDrawDone = false;
 
 int currentPlayer = 1;
 
+int pixel = 32;
+
 int** passing_arr_p1;
 int** passing_arr_p2;
+
+//int** desAndOpt;
+
+int currentCharacter = 0;
+
+bool isGameStarted = false;
+
+double moveChange_p1 = 1, moveChange_p2 = 1;
+
+wchar_t* text;
+void HandleTimer(HWND hwnd, wchar_t* displayText)
+{
+    HDC hdc = GetDC(hwnd);
+    const wchar_t currentChar = displayText[currentCharacter];
+    SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+    SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+    TextOutW(hdc, pixel + 10 + currentCharacter * 10, (Width + 2) * pixel + 10, &currentChar, 1); // 逐個字符顯示
+
+    currentCharacter++; // 增加字符index
+
+    // 如果所有字符都已經顯示，停止定時器
+    if (currentCharacter >= wcslen(displayText)) KillTimer(hwnd, 1);   // 停止定時器
+    ReleaseDC(hwnd, hdc);
+}
+
+void printOutAll(HWND hwnd)
+{
+    HDC hdc = GetDC(hwnd);
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    for (int i = 0; i <= screenWidth/pixel; i++)
+    {
+        DrawIcon(hdc, i * pixel, 0, hIcon_rock);
+        DrawIcon(hdc, i * pixel, screenHeight-pixel, hIcon_rock);
+    }
+    for (int j = 0; j <= screenHeight/pixel; j++)
+    {
+        DrawIcon(hdc, 0, j * pixel, hIcon_rock);
+        DrawIcon(hdc, screenWidth-pixel, j * pixel, hIcon_rock);
+    }
+    // Draw the balack rectangles here
+    for (int i = 1; i <= Length; i++) {
+        for (int j = 1; j <= Width; j++) {
+            if(mapArray[j][i] == 1) DrawIcon(hdc, i * pixel, j * pixel, hIcon_grass);
+            else if(mapArray[j][i] == 2) DrawIcon(hdc, i * pixel, j * pixel, hIcon_water);
+            else if(mapArray[j][i] == 3) DrawIcon(hdc, i * pixel, j * pixel, hIcon_rock);
+        }
+    }
+    DrawIcon(hdc, 2 * pixel, 1 * pixel, hIcon_des); // 機會與命運顯示
+    for (int i = 1; i <= Width; i++)
+    {
+        DrawIcon(hdc, (Length + 1) * pixel, i * pixel, hIcon_rock);
+    }
+    for (int i = 1; i <= Length + 1; i++)
+    {
+        DrawIcon(hdc, i * pixel, (Width + 1) * pixel, hIcon_rock);
+    }
+}
+
+void DesAndOpt_p1(int x, int y)
+{
+    if(mapArray[x][y] == 4)
+    {
+        int opportunityCase = generateRandomNumber(1, 6); // opportinity機會 : 改變步數
+        switch(opportunityCase)
+        {
+            case 1:
+                moveChange_p1 = 2;
+            case 2:
+                moveChange_p1 = 0.5;
+            case 3:
+                moveChange_p2 = 0.5;
+            case 4:
+                moveChange_p1 = 0;
+            case 5:
+                moveChange_p2 = 0;
+            case 6:
+                moveChange_p1 = 1.5;
+        }
+    }
+    else if(mapArray[x][y] == 5)
+    {
+        int destinyCase = generateRandomNumber(1, 6); // destiny命運 : 改變障礙物跟位置
+        switch(destinyCase)
+        {
+            case 1:
+                if(mapArray[x-1][y] + mapArray[x+1][y] + mapArray[x][y-1] + mapArray[x][y+1] <= 5)
+                {
+                    mapArray[x-1][y] = 3;
+                }
+            case 2:
+                if(mapArray[x-1][y] + mapArray[x+1][y] + mapArray[x][y-1] + mapArray[x][y+1] <= 5)
+                {
+                    mapArray[x+1][y] = 3;
+                }
+            case 3:
+                if(mapArray[x-1][y] + mapArray[x+1][y] + mapArray[x][y-1] + mapArray[x][y+1] <= 5)
+                {
+                    mapArray[x][y-1] = 3;
+                }
+            case 4:
+                if(mapArray[x-1][y] + mapArray[x+1][y] + mapArray[x][y-1] + mapArray[x][y+1] <= 5)
+                {
+                    mapArray[x][y+1] = 3;
+                }
+        }
+    }
+}
+
+//void DesAndOpt_p1(int x, int y, )
+//{
+//    if(mapArray[])
+//}
 
 #pragma region WindowProc
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc = GetDC(hwnd);
-    const wchar_t* text;
-    //HFONT hFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
-    //SelectObject(hdc, hFont);
-    text = L"Please choose small (press 1), medium (press 2), or large (press 3).";
-    TextOutW(hdc, 10, 10, text, wcslen(text));
-    ReleaseDC(hwnd, hdc);  // 釋放裝置內文
-
-    /// 方框
-    hdc = GetDC(hwnd);
 
     switch (uMsg) {
+        case WM_CREATE:
+        {
+            // Make the window fullscreen
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
+            break;
+        }
+        case WM_TIMER:
+        {
+            HandleTimer(hwnd, text);
+            break;
+        }
         case WM_PAINT:
         {
             passing_arr_p1[1][1] = 1;
@@ -183,31 +321,40 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
-            HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-            HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
-            HBRUSH grassBrush = CreateSolidBrush(RGB(0, 201, 87));
-            HBRUSH waterBrush = CreateSolidBrush(RGB(0, 255, 255));
-            HBRUSH rockBrush = CreateSolidBrush(RGB(192, 192, 192));
+            // 設置黑色背景
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            FillRect(hdc, &clientRect, blackBrush);
 
-            // Check if initial drawing is done
-            if (!isInitialDrawDone) {
-                // Draw the balack rectangles here
-                for (int i = 1; i <= Length; i++) {
-                    for (int j = 1; j <= Width; j++) {
-                        RECT rect = {i * 50, j * 50, (i + 1) * 50, (j + 1) * 50};
-                        if(mapArray[j][i] == 1) FillRect(hdc, &rect, grassBrush);
-                        else if(mapArray[j][i] == 2) FillRect(hdc, &rect, waterBrush);
-                        else if(mapArray[j][i] == 3) FillRect(hdc, &rect, rockBrush);
-                    }
+            if (!isGameStarted) //起始畫面
+            {
+                currentCharacter = 0;
+                text = L"Press Enter to start...";
+                SetTimer(hwnd, 1, 30, NULL);
+            }
+            else if(isGameStarted)
+            {
+                currentCharacter = 0;
+                text = L"Please choose small (press 1), medium (press 2), or large (press 3)...";
+                SetTimer(hwnd, 1, 30, NULL);
+                // Check if initial drawing is done
+                if (!isInitialDrawDone) {
+                    printOutAll(hwnd);
+                    DrawIcon(hdc, 1 * pixel, 1 * pixel, hIcon_player1);
+                    DrawIcon(hdc, Length * pixel, Width * pixel, hIcon_player2);
+
+                    isInitialDrawDone = true;
                 }
-                RECT rect;
-                rect = {1 * 50, 1 * 50, (1 + 1) * 50, (1 + 1) * 50};
-                FillRect(hdc, &rect, redBrush);
 
-                rect = {Length * 50, Width * 50, (Length + 1) * 50, (Width + 1) * 50};
-                FillRect(hdc, &rect, blueBrush);
-
-                isInitialDrawDone = true;
+                currentCharacter = 0;
+                text = L"p1 steps : ";
+                SetTimer(hwnd, 1, 30, NULL);
+                DrawIcon(hdc, i * pixel, j * pixel, hIcon_water);
+//                currentCharacter = 0;
+//                wstring transfer = L"p1 steps : " + to_wstring(p1_moves);
+//                text = transfer.c_str();
+//                SetTimer(hwnd, 1, 30, NULL);
+                cout << p1_moves << " " << p2_moves << endl;
             }
 
             EndPaint(hwnd, &ps);
@@ -223,34 +370,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_KEYDOWN:
         {
+            if(wParam == VK_ESCAPE)
+            {
+                PostQuitMessage(0); // 結束程序
+                ShowCursor(TRUE);   // 顯示鼠標
+            }
+            if(wParam == VK_RETURN && isGameStarted == false) { // 假設 Enter 鍵啟動遊戲
+                isGameStarted = true;
+                InvalidateRect(hwnd, NULL, TRUE); // 通知窗口需要重新繪製
+            }
             swprintf_s(msg, L"WM_KEYDOWN: 0x%x\n", wParam);
             OutputDebugStringW(msg);
             cout << "WM_KEYDOWN" << endl;
 
-            HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-            HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
-            HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
-
             RECT rect;
 
-            rect = {p1_x * 50 + 20, p1_y * 50 + 20, (p1_x + 1) * 50 - 20, (p1_y + 1) * 50 - 20};
-            FillRect(hdc, &rect, redBrush);
-
-            rect = {p2_x * 50 + 20, p2_y * 50 + 20, (p2_x + 1) * 50 - 20, (p2_y + 1) * 50 - 20};
-            FillRect(hdc, &rect, blueBrush);
-
-
-            if (currentPlayer == 1)
+            if (currentPlayer == 1 && isGameStarted == true)
             {
                 switch (wParam)
                 {
                     case VK_UP:
                         if(p1_y > 1 && passing_arr_p1[p1_x][p1_y - 1] == 0)
                         {
+                            DesAndOpt_p1(p1_x, p1_y);
                             cout << "up" << endl;
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_y -= 1;
-                            rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
-                            FillRect(hdc, &rect, redBrush);
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
                             p1_moves--;
                             passing_arr_p1[p1_y][p1_x] = 1;
                             break;
@@ -262,9 +408,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if(p1_y < Width && passing_arr_p1[p1_y + 1][p1_x] == 0)
                         {
                             cout << "down" << endl;
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_y += 1;
-                            rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
-                            FillRect(hdc, &rect, redBrush);
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
                             p1_moves--;
                             passing_arr_p1[p1_y][p1_x] = 1;
                             break;
@@ -276,9 +422,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if(p1_x > 1 && passing_arr_p1[p1_y][p1_x - 1] == 0)
                         {
                             cout << "left" << endl;
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_x -= 1;
-                            rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
-                            FillRect(hdc, &rect, redBrush);
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
                             p1_moves--;
                             passing_arr_p1[p1_y][p1_x] = 1;
                             break;
@@ -290,9 +436,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if(p1_x < Length && passing_arr_p1[p1_y][p1_x + 1] == 0)
                         {
                             cout << "right" << endl;
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_x += 1;
-                            rect = { p1_x * 50, p1_y * 50, p1_x * 50 + 50, p1_y * 50 + 50 }; //紅色方框
-                            FillRect(hdc, &rect, redBrush);
+                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
                             p1_moves--;
                             passing_arr_p1[p1_y][p1_x] = 1;
                             break;
@@ -302,21 +448,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     default:
                         break;
                 }
-                if(p1_moves != 3)
-                {
-                    rect = {p1_x * 50 + 20, p1_y * 50 + 20, (p1_x + 1) * 50 - 20, (p1_y + 1) * 50 - 20};
-                    FillRect(hdc, &rect, whiteBrush);
-                }
                 if(p1_moves == 0)
                 {
                     currentPlayer = 2;
-                    rect = {p1_x * 50 + 20, p1_y * 50 + 20, (p1_x + 1) * 50 - 20, (p1_y + 1) * 50 - 20};
-                    FillRect(hdc, &rect, redBrush);
-                    rect = {p2_x * 50 + 20, p2_y * 50 + 20, (p2_x + 1) * 50 - 20, (p2_y + 1) * 50 - 20};
-                    FillRect(hdc, &rect, whiteBrush);
                 }
             }
-            else if (currentPlayer == 2)
+            else if (currentPlayer == 2 && isGameStarted == true)
             {
                 switch (wParam)
                 {
@@ -324,9 +461,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if(p2_y > 1 && passing_arr_p2[p2_y - 1][p2_x] == 0)
                         {
                             cout << "W pressed" << endl;
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_y -= 1;
-                            rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
-                            FillRect(hdc, &rect, blueBrush);
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
                             p2_moves--;
                             passing_arr_p2[p2_y][p2_x] = 1;
                             break;
@@ -337,9 +474,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if(p2_y < Width && passing_arr_p2[p2_y + 1][p2_x] == 0)
                         {
                             cout << "S pressed" << endl;
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_y += 1;
-                            rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
-                            FillRect(hdc, &rect, blueBrush);
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
                             p2_moves--;
                             passing_arr_p2[p2_y][p2_x] = 1;
                             break;
@@ -351,9 +488,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if(p2_x > 1 && passing_arr_p2[p2_y][p2_x - 1] == 0)
                         {
                             cout << "A pressed" << endl;
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_x -= 1;
-                            rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
-                            FillRect(hdc, &rect, blueBrush);
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
                             p2_moves--;
                             passing_arr_p2[p2_y][p2_x] = 1;
                             break;
@@ -365,9 +502,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if(p2_x < Length && passing_arr_p2[p2_y][p2_x + 1] == 0)
                         {
                             cout << "D pressed" << endl;
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_x += 1;
-                            rect = { p2_x * 50, p2_y * 50, p2_x * 50 + 50, p2_y * 50 + 50 }; //藍色方框
-                            FillRect(hdc, &rect, blueBrush);
+                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
                             p2_moves--;
                             passing_arr_p2[p2_y][p2_x] = 1;
                             break;
@@ -377,46 +514,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     default:
                         break;
                 }
-                rect = {p2_x * 50 + 20, p2_y * 50 + 20, (p2_x + 1) * 50 - 20, (p2_y + 1) * 50 - 20};
-                FillRect(hdc, &rect, whiteBrush);
                 if(p2_moves == 0)
                 {
-                    /*PAINTSTRUCT ps;
-                    HDC hdc = BeginPaint(hwnd, &ps);*/
-
-                    HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-                    HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
-                    HBRUSH grassBrush = CreateSolidBrush(RGB(0, 201, 87));
-                    HBRUSH waterBrush = CreateSolidBrush(RGB(0, 255, 255));
-                    HBRUSH rockBrush = CreateSolidBrush(RGB(192, 192, 192));
                     // Switch turns after a move
                     isInitialDrawDone = 0;
                     // Reset moves for the next player
-                    p1_moves = 3;
-                    p2_moves = 3;
-                    // Draw the black rectangles here
-                    
-                    for (int i = 1; i <= Length; i++) {
-                        for (int j = 1; j <= Width; j++) {
-                            RECT rect = {i * 50, j * 50, (i + 1) * 50, (j + 1) * 50};
-                            if(mapArray[j][i] == 1) FillRect(hdc, &rect, grassBrush);
-                            else if(mapArray[j][i] == 2) FillRect(hdc, &rect, waterBrush);
-                            else if(mapArray[j][i] == 3) FillRect(hdc, &rect, rockBrush);
-                        }
-                    }
-                    rect = {p1_x * 50 + 20, p1_y * 50 + 20, (p1_x + 1) * 50 - 20, (p1_y + 1) * 50 - 20};
-                    FillRect(hdc, &rect, redBrush);
 
-                    rect = {p2_x * 50 + 20, p2_y * 50 + 20, (p2_x + 1) * 50 - 20, (p2_y + 1) * 50 - 20};
-                    FillRect(hdc, &rect, blueBrush);
+                    // clear all
+                    RECT clientRect;
+                    GetClientRect(hwnd, &clientRect);
+                    FillRect(hdc, &clientRect, blackBrush);
+
+                    printOutAll(hwnd);
+                    DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
+                    DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
+
                     currentPlayer = 1;
+                    p1_moves = generateRandomNumber(2, 6);
+                    p2_moves = generateRandomNumber(2, 6);
 
                     for(int i = 1 ; i <= Width ; i++)
                     {
                         for(int j = 1 ; j <= Length ; j++)
                         {
-                            passing_arr_p1[i][j] = 0;
-                            passing_arr_p2[i][j] = 0;
+                            if(mapArray[i][j] == 1)
+                            {
+                                passing_arr_p1[i][j] = 0;
+                                passing_arr_p2[i][j] = 0;
+                            }
                         }
                     }
 
@@ -425,10 +550,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
 
-
-
             if (p1_x == p2_x && p1_y == p2_y)
             {
+                ShowCursor(TRUE);
                 PostQuitMessage(0); // 結束程序
             }
             ReleaseDC(hwnd, hdc);
@@ -447,14 +571,17 @@ int main()
     mapArray = new int*[Width + 1];
     passing_arr_p1 = new int*[Width + 1];
     passing_arr_p2 = new int*[Width + 1];
+    //desAndOpt = new int*[Width + 1];
     for (int i = 0; i < Width + 1; i++) {
         mapArray[i] = new int[Length + 1];
         passing_arr_p1[i] = new int[Length + 1];
         passing_arr_p2[i] = new int [Length + 1];
+        //desAndOpt[i] = new int[Length + 1];
         for (int j = 0; j < Length + 1; j++) {
             mapArray[i][j] = 0; // 初始化陣列值為 0
             passing_arr_p1[i][j] = 0;
             passing_arr_p2[i][j] = 0;
+            //desAndOpt[i][j] = 0;
         }
     }
     //建立地圖
@@ -467,15 +594,15 @@ int main()
     }
 
     //加入湖水
-    int lakeCnt = generateRandomNumber(static_cast<int>(225 * 0.02),
-                                       static_cast<int>(225 * 0.04));
+    int lakeCnt = generateRandomNumber(static_cast<int>(Length * Width * 0.02),
+                                       static_cast<int>(Length * Width * 0.04));
     //cout << lakeCnt << endl;
     for (int i = 1; i <= lakeCnt; i++)
         myTileMap.generateWaterMass();
 
     //加入岩石
-    int rockCnt = generateRandomNumber(static_cast<int>(225 * 0.05),
-                                       static_cast<int>(225 * 0.1));
+    int rockCnt = generateRandomNumber(static_cast<int>(Length * Width * 0.05),
+                                       static_cast<int>(Length * Width * 0.1));
     //cout << rockCnt << endl;
     myTileMap.randomRocks(rockCnt);
 
@@ -498,10 +625,20 @@ int main()
                         break;
                     case WATER:
                         mapArray[i][j] = 2;
+                        passing_arr_p1[i][j] = 1;
+                        passing_arr_p2[i][j] = 1;
                         break;
                     case ROCK:
                         mapArray[i][j] = 3;
+                        passing_arr_p1[i][j] = 1;
+                        passing_arr_p2[i][j] = 1;
                         break;
+//                    case []:
+//                        mapArray[i][j] = 4;
+//                        desAndOpt[i][j] = 1; // des
+//                    case []:
+//                        mapArray[i][j] = 5;
+//                        desAndOpt[i][j] = 2; // opt
                 }
             }
         }
@@ -511,8 +648,11 @@ int main()
             }
             cout << endl;
         }
+
+    //desAndOpt[1][2] = 1;
     ///----------------------------------
 
+    ShowCursor(FALSE);
     // 註冊視窗
     WNDCLASSW wc = {};
     wc.lpfnWndProc = WindowProc;
@@ -522,13 +662,18 @@ int main()
 
     // 創建視窗
     HWND hwnd = CreateWindowExW(0, L"SampleWindowClass", L"Sample Window", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 1200, 900, NULL, NULL, GetModuleHandleW(NULL), NULL);
+        0, 0, 0, 0, NULL, NULL, GetModuleHandleW(NULL), NULL);
 
     if (hwnd == NULL)
     {
         cerr << "視窗創建失敗！" << endl;
+        ShowCursor(TRUE);
         return 1;
     }
+
+    // 設置為全螢幕
+    SetWindowLong(hwnd, GWL_STYLE, WS_POPUP);
+    SetWindowPos(hwnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
 
     // 顯示視窗
     ShowWindow(hwnd, SW_SHOWDEFAULT);
@@ -540,6 +685,8 @@ int main()
         DispatchMessage(&msg);
     }
 
+    ShowCursor(TRUE);
+
     // 恢復編譯器警告設定
     #pragma GCC diagnostic pop
 
@@ -548,9 +695,11 @@ int main()
         delete[] mapArray[i];
         delete[] passing_arr_p1[i];
         delete[] passing_arr_p2[i];
+        //delete[] desAndOpt[i];
     }
     delete[] mapArray;
     delete[] passing_arr_p1;
     delete[] passing_arr_p2;
+    //delete[] desAndOpt;
     return 0;
 }
