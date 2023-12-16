@@ -8,7 +8,6 @@
 #include <string>
 using namespace std;
 
-
 int Length = 20, Width = 10; // 定義地圖的長度和寬度
 HICON hIcon_player1 = (HICON)LoadImage(NULL, L"JNG (2).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 HICON hIcon_player2 = (HICON)LoadImage(NULL, L"HCR (2).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
@@ -193,8 +192,9 @@ double moveChange_p1 = 1, moveChange_p2 = 1;
 
 wchar_t* stepText_p1;
 wchar_t* stepText_p2;
-wchar_t* condition_text_p1;
-wchar_t* condition_text_p2;
+wchar_t* condition_text;
+
+int conditionTextCnt = 0;
 
 wchar_t* text;
 void HandleTimer(HWND hwnd, wchar_t* displayText)
@@ -217,6 +217,13 @@ void printOutAll(HWND hwnd)
     HDC hdc = GetDC(hwnd);
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    // clear all
+    RECT clientRect;
+    GetClientRect(hwnd, &clientRect);
+    RECT customRect = {(Length + 2) * pixel, 190, screenWidth-pixel-10, screenHeight-pixel-10};
+    ExcludeClipRect(hdc, customRect.left, customRect.top, customRect.right, customRect.bottom);
+    FillRect(hdc, &clientRect, blackBrush);
+
     for (int i = 0; i <= screenWidth/pixel; i++)
     {
         DrawIcon(hdc, i * pixel, 0, hIcon_rock);
@@ -235,7 +242,6 @@ void printOutAll(HWND hwnd)
             else if(mapArray[j][i] == 3) DrawIcon(hdc, i * pixel, j * pixel, hIcon_rock);
         }
     }
-
 
     for (int i = 1; i <= screenHeight/pixel; i++)
     {
@@ -265,6 +271,65 @@ void printOutAll(HWND hwnd)
     }
 }
 
+int cntAroundObstacles(int player, int x, int y)
+{
+    if(x == 1 || x == Length || y == 1 || y == Width) return 0;
+    int cnt = 0;
+    if(player == 1)
+    {
+        if(passing_arr_p1[y-1][x] == 1) cnt++;
+        if(passing_arr_p1[y+1][x] == 1) cnt++;
+        if(passing_arr_p1[y][x+1] == 1) cnt++;
+        if(passing_arr_p1[y][x-1] == 1) cnt++;
+    }
+    else if(player == 2)
+    {
+        if(passing_arr_p2[y-1][x] == 1) cnt++;
+        if(passing_arr_p2[y+1][x] == 1) cnt++;
+        if(passing_arr_p2[y][x+1] == 1) cnt++;
+        if(passing_arr_p2[y][x-1] == 1) cnt++;
+    }
+    return cnt;
+}
+
+void BlackHole(int player, int x, int y, HWND hwnd)
+{
+    HDC hdc = GetDC(hwnd);
+    mapArray[y][x] = 1;
+    if(player == 1)
+    {
+        DrawIcon(hdc, x * pixel, y * pixel, hIcon_player1);
+        DrawIcon(hdc, x * pixel, y * pixel, hIcon_flag);
+        int isNewPositionLegal = false;
+        while(isNewPositionLegal == false)
+        {
+            p1_x = generateRandomNumber(1, Length);
+            p1_y = generateRandomNumber(1, Width);
+            if(passing_arr_p1[p1_y][p1_x] == 0 && mapArray[p1_y][p1_x] == 1 && p1_x != x && p1_y != y && p1_x != p2_x && p1_y != p2_y && cntAroundObstacles(1, p1_x, p1_y) <= 2)
+            {
+                isNewPositionLegal = true;
+                DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
+            }
+        }
+    }
+    else if(player == 2)
+    {
+        DrawIcon(hdc, x * pixel, y * pixel, hIcon_player2);
+        DrawIcon(hdc, x * pixel, y * pixel, hIcon_flag);
+        int isNewPositionLegal = false;
+        while(isNewPositionLegal == false)
+        {
+            p2_x = generateRandomNumber(1, Length);
+            p2_y = generateRandomNumber(1, Width);
+            if(passing_arr_p2[p2_y][p2_x] == 0 && mapArray[p2_y][p2_x] == 1 && p2_x != x && p2_y != y && p2_x != p1_x && p2_y != p1_y && cntAroundObstacles(2, p2_x, p2_y) <= 2)
+            {
+                isNewPositionLegal = true;
+                DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
+            }
+        }
+    }
+}
+
 void conditionText(int player, int DandO, int Case, HWND hwnd)
 {
     HDC hdc = GetDC(hwnd);
@@ -274,24 +339,30 @@ void conditionText(int player, int DandO, int Case, HWND hwnd)
     wchar_t* player1or2;
     if(player == 1) player1or2 = L"player 1 : ";
     else if(player == 2) player1or2 = L"player 2 : ";
-    TextOutW(hdc, (Length + 2) * pixel + 10, 200, player1or2, static_cast<int>(wcslen(player1or2)));
+    TextOutW(hdc, (Length + 2) * pixel + 10, 200 + conditionTextCnt * pixel, player1or2, static_cast<int>(wcslen(player1or2)));
 
     if(DandO == 4)
     {
         switch(Case)
         {
             case 1:
-                condition_text_p1 = L"next steps x 2";
+                condition_text = L"next steps x 2";
+                break;
             case 2:
-                condition_text_p1 = L"next steps x 0.5";
+                condition_text = L"next steps x 0.5";
+                break;
             case 3:
-                condition_text_p1 = L"opponent's next steps x 0.5";
+                condition_text = L"opponent's next steps x 0.5";
+                break;
             case 4:
-                condition_text_p1 = L"next steps x 0";
+                condition_text = L"next steps x 0";
+                break;
             case 5:
-                condition_text_p1 = L"opponent's next steps x 0";
+                condition_text = L"opponent's next steps x 0";
+                break;
             case 6:
-                condition_text_p1 = L"next steps x 1.5";
+                condition_text = L"next steps x 1.5";
+                break;
         }
     }
     else if(DandO == 5)
@@ -299,20 +370,75 @@ void conditionText(int player, int DandO, int Case, HWND hwnd)
         switch(Case)
         {
             case 1:
-                condition_text_p1 = L"add a rock above you";
+                condition_text = L"add a rock above you";
+                break;
             case 2:
-                condition_text_p1 = L"add a rock below you";
+                condition_text = L"add a rock below you";
+                break;
             case 3:
-                condition_text_p1 = L"add a rock on your right";
+                condition_text = L"add a rock on your right";
+                break;
             case 4:
-                condition_text_p1 = L"add a rock on your left";
+                condition_text = L"add a rock on your left";
+                break;
             case 5:
-                condition_text_p1 = L"remove all obstacles around you";
+                condition_text = L"remove all obstacles around you";
+                break;
+            case 10:    // 黑洞傳送
+                condition_text = L"there's no way to go, transfer to a new place.";
+                break;
         }
     }
+    TextOutW(hdc, (Length + 2) * pixel + 100, 200 + conditionTextCnt * pixel, condition_text, static_cast<int>(wcslen(condition_text)));
+    conditionTextCnt++;
+    if(conditionTextCnt > 21)
+    {
+        int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+        int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+        RECT customRect = {(Length + 2) * pixel, 190, screenWidth-pixel-10, screenHeight-pixel-10};
+        FillRect(hdc, &customRect, blackBrush);
+        conditionTextCnt = 0;
+    }
+}
 
-    TextOutW(hdc, (Length + 2) * pixel + 100, 200, condition_text_p1, static_cast<int>(wcslen(condition_text_p1)));
-    //TextOutW(hdc, (Length + 2) * pixel + 10, 90, stepText_p2, static_cast<int>(wcslen(stepText_p2)));
+void destinyModule(int player, int x, int y, int destinyCase, HWND hwnd) //此xy是加減過的
+{
+    HDC hdc = GetDC(hwnd);
+    if(player == 1)
+    {
+        mapArray[y][x] = 3;
+        passing_arr_p1[y][x] = 1;
+        DrawIcon(hdc, x * pixel, y * pixel, hIcon_rock);
+        conditionText(1, 5, destinyCase, hwnd);
+    }
+    else if(player == 2)
+    {
+        mapArray[y][x] = 3;
+        passing_arr_p2[y][x] = 1;
+        DrawIcon(hdc, x * pixel, y * pixel, hIcon_rock);
+        conditionText(2, 5, destinyCase, hwnd);
+    }
+}
+
+void destinyCase5Close(int player, int x, int y, HWND hwnd) // xy是加減過的
+{
+    HDC hdc = GetDC(hwnd);
+    if(player == 1)
+    {
+        if(x != p2_x && y != p2_y)
+        {
+            mapArray[y][x] = 1;
+            DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
+        }
+    }
+    else if(player == 2)
+    {
+        if(x != p1_x && y != p1_y)
+        {
+            mapArray[y][x] = 1;
+            DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
+        }
+    }
 }
 
 void DesAndOpt_p1(int x, int y, HWND hwnd)
@@ -325,16 +451,22 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
         {
             case 1:
                 moveChange_p1 = 2;
+                break;
             case 2:
                 moveChange_p1 = 0.5;
+                break;
             case 3:
                 moveChange_p2 = 0.5;
+                break;
             case 4:
                 moveChange_p1 = 0;
+                break;
             case 5:
                 moveChange_p2 = 0;
+                break;
             case 6:
                 moveChange_p1 = 1.5;
+                break;
         }
         mapArray[y][x] = 1;
         DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
@@ -343,65 +475,47 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
     else if(mapArray[y][x] == 5)
     {
         int destinyCase = generateRandomNumber(1, 5); // destiny命運 : 改變障礙物跟位置
-        switch(destinyCase)
+        int cnt = cntAroundObstacles(1, x, y);
+        if(destinyCase == 5)
         {
-            case 1:
-                if(mapArray[y][x-1] + mapArray[y][x+1] + mapArray[y+1][x] + mapArray[y-1][x] <= 5)
-                {
-                    mapArray[y][x-1] = 3;
-                    mapArray[y][x] = 1;
-                    passing_arr_p1[y][x-1] = 1;
-                    DrawIcon(hdc, (x-1) * pixel, y * pixel, hIcon_rock);
-                    DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
-                }
-            case 2:
-                if(mapArray[y][x-1] + mapArray[y][x+1] + mapArray[y+1][x] + mapArray[y-1][x] <= 5)
-                {
-                    mapArray[y][x+1] = 3;
-                    mapArray[y][x] = 1;
-                    passing_arr_p1[y][x+1] = 1;
-                    DrawIcon(hdc, (x+1) * pixel, y * pixel, hIcon_rock);
-                    DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
-                }
-            case 3:
-                if(mapArray[y][x-1] + mapArray[y][x+1] + mapArray[y+1][x] + mapArray[y-1][x] <= 5)
-                {
-                    mapArray[y+1][x] = 3;
-                    mapArray[y][x] = 1;
-                    passing_arr_p1[y+1][x] = 1;
-                    DrawIcon(hdc, x * pixel, (y+1) * pixel, hIcon_rock);
-                    DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
-                }
-            case 4:
-                if(mapArray[y][x-1] + mapArray[y][x+1] + mapArray[y+1][x] + mapArray[y-1][x] <= 5)
-                {
-                    mapArray[y-1][x] = 3;
-                    mapArray[y][x] = 1;
-                    passing_arr_p1[y-1][x] = 1;
-                    DrawIcon(hdc, x * pixel, (y-1) * pixel, hIcon_rock);
-                    DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
-                }
-            case 5:
-                mapArray[y][x] = 1;
-                mapArray[y][x-1] = 1;
-                mapArray[y][x+1] = 1;
-                mapArray[y-1][x] = 1;
-                mapArray[y+1][x] = 1;
-                DrawIcon(hdc, (x-1) * pixel, y * pixel, hIcon_grass);
-                DrawIcon(hdc, (x+1) * pixel, y * pixel, hIcon_grass);
-                DrawIcon(hdc, x * pixel, (y-1) * pixel, hIcon_grass);
-                DrawIcon(hdc, x * pixel, (y+1) * pixel, hIcon_grass);
-                DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
-            //case 6:
-                /*swap(p1_x, p2_x);
-                swap(p1_y, p2_y);
-                // clear all
-                RECT clientRect;
-                GetClientRect(hwnd, &clientRect);
-                FillRect(hdc, &clientRect, blackBrush);
-                printOutAll(hwnd);&*/
+            mapArray[y][x] = 1;
+            DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
+
+            destinyCase5Close(1, x-1, y, hwnd);
+            destinyCase5Close(1, x+1, y, hwnd);
+            destinyCase5Close(1, x, y-1, hwnd);
+            destinyCase5Close(1, x, y+1, hwnd);
+
+            conditionText(1, 5, destinyCase, hwnd);
         }
-        conditionText(1, 5, destinyCase, hwnd);
+        else
+        {
+            if(cnt <= 3)
+            {
+                mapArray[y][x] = 1;
+                DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
+                switch(destinyCase)
+                {
+                    case 1:
+                        destinyModule(1, x, y-1, destinyCase, hwnd);
+                        break;
+                    case 2:
+                        destinyModule(1, x, y+1, destinyCase, hwnd);
+                        break;
+                    case 3:
+                        destinyModule(1, x+1, y, destinyCase, hwnd);
+                        break;
+                    case 4:
+                        destinyModule(1, x-1, y, destinyCase, hwnd);
+                        break;
+                }
+            }
+            else if(cnt > 3)
+            {
+                BlackHole(1, x, y, hwnd);
+                conditionText(1, 5, 10, hwnd);
+            }
+        }
     }
 
     RECT rect;
@@ -410,10 +524,124 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
     p1_moves = 1;
 }
 
-//void DesAndOpt_p1(int x, int y, )
-//{
-//    if(mapArray[])
-//}
+void DesAndOpt_p2(int x, int y, HWND hwnd)
+{
+    HDC hdc = GetDC(hwnd);
+    if(mapArray[y][x] == 4)
+    {
+        int opportunityCase = generateRandomNumber(1, 6); // opportinity機會 : 改變步數
+        switch(opportunityCase)
+        {
+            case 1:
+                moveChange_p2 = 2;
+                break;
+            case 2:
+                moveChange_p2 = 0.5;
+                break;
+            case 3:
+                moveChange_p1 = 0.5;
+                break;
+            case 4:
+                moveChange_p2 = 0;
+                break;
+            case 5:
+                moveChange_p1 = 0;
+                break;
+            case 6:
+                moveChange_p2 = 1.5;
+                break;
+        }
+        mapArray[y][x] = 1;
+        DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
+        conditionText(2, 4, opportunityCase, hwnd);
+    }
+    else if(mapArray[y][x] == 5)
+    {
+        int destinyCase = generateRandomNumber(1, 5); // destiny命運 : 改變障礙物跟位置
+        int cnt = cntAroundObstacles(2, x, y);
+        if(destinyCase == 5)
+        {
+            mapArray[y][x] = 1;
+            DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
+
+            destinyCase5Close(2, x-1, y, hwnd);
+            destinyCase5Close(2, x+1, y, hwnd);
+            destinyCase5Close(2, x, y-1, hwnd);
+            destinyCase5Close(2, x, y+1, hwnd);
+
+            conditionText(2, 5, destinyCase, hwnd);
+        }
+        else
+        {
+            if(cnt <= 3)
+            {
+                mapArray[y][x] = 1;
+                DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
+                switch(destinyCase)
+                {
+                    case 1:
+                        destinyModule(2, x, y-1, destinyCase, hwnd);
+                        break;
+                    case 2:
+                        destinyModule(2, x, y+1, destinyCase, hwnd);
+                        break;
+                    case 3:
+                        destinyModule(2, x+1, y, destinyCase, hwnd);
+                        break;
+                    case 4:
+                        destinyModule(2, x-1, y, destinyCase, hwnd);
+                        break;
+                }
+            }
+            else if(cnt > 3)
+            {
+                BlackHole(2, x, y, hwnd);
+                conditionText(2, 5, 10, hwnd);
+            }
+        }
+    }
+
+    RECT rect;
+    rect = {(Length + 5) * pixel, 90, (Length + 5 + 15) * pixel + 50, 90 + 50};
+    FillRect(hdc, &rect, blackBrush);
+    p2_moves = 1;
+}
+
+void UpDownLeftRight(int player, HWND hwnd)
+{
+    RECT rect;
+    HDC hdc = GetDC(hwnd);
+    if(player == 1)
+    {
+        rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
+        FillRect(hdc, &rect, blackBrush);
+        if(mapArray[p1_y][p1_x] == 4 || mapArray[p1_y][p1_x] == 5) DesAndOpt_p1(p1_x, p1_y, hwnd);
+        DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
+        p1_moves--;
+        passing_arr_p1[p1_y][p1_x] = 1;
+
+        if(cntAroundObstacles(1, p1_x, p1_y) > 3)
+        {
+            BlackHole(1, p1_x, p1_y, hwnd);
+            conditionText(1, 5, 10, hwnd);
+        }
+    }
+    else if(player == 2)
+    {
+        rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
+        FillRect(hdc, &rect, blackBrush);
+        if(mapArray[p2_y][p2_x] == 4 || mapArray[p2_y][p2_x] == 5) DesAndOpt_p2(p2_x, p2_y, hwnd);
+        DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
+        p2_moves--;
+        passing_arr_p2[p2_y][p2_x] = 1;
+
+        if(cntAroundObstacles(2, p2_x, p2_y) > 3)
+        {
+            BlackHole(2, p2_x, p2_y, hwnd);
+            conditionText(2, 5, 10, hwnd);
+        }
+    }
+}
 
 #pragma region WindowProc
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -423,6 +651,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg) {
         case WM_CREATE:
         {
+            srand(static_cast<unsigned int>(time(nullptr)));
             // Make the window fullscreen
             SetWindowPos(hwnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
             break;
@@ -440,13 +669,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
-            // 設置黑色背景
-            RECT clientRect;
-            GetClientRect(hwnd, &clientRect);
-            FillRect(hdc, &clientRect, blackBrush);
-
             if (!isGameStarted) //起始畫面
             {
+                // 設置黑色背景
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                FillRect(hdc, &clientRect, blackBrush);
+
                 currentCharacter = 0;
                 text = L"Press Enter to start...";
                 SetTimer(hwnd, 1, 30, NULL);
@@ -460,7 +689,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 // Check if initial drawing is done
                 if (!isInitialDrawDone) {
                     printOutAll(hwnd);
-
                     isInitialDrawDone = true;
                 }
             }
@@ -498,17 +726,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 switch (wParam)
                 {
                     case VK_UP:
-                        if(p1_y > 1 && passing_arr_p1[p1_x][p1_y - 1] == 0)
+                        if(p1_y > 1 && passing_arr_p1[p1_y - 1][p1_x] == 0)
                         {
                             cout << "up" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_y -= 1;
-                            rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            if(mapArray[p1_y][p1_x] == 4 || mapArray[p1_y][p1_x] == 5) DesAndOpt_p1(p1_x, p1_y, hwnd);
-                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
-                            p1_moves--;
-                            passing_arr_p1[p1_y][p1_x] = 1;
+                            UpDownLeftRight(1, hwnd);
                             break;
                         }
                         else break;
@@ -520,13 +743,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             cout << "down" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_y += 1;
-                            rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            if(mapArray[p1_y][p1_x] == 4 || mapArray[p1_y][p1_x] == 5) DesAndOpt_p1(p1_x, p1_y, hwnd);
-                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
-
-                            p1_moves--;
-                            passing_arr_p1[p1_y][p1_x] = 1;
+                            UpDownLeftRight(1, hwnd);
                             break;
                         }
                         else break;
@@ -538,13 +755,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             cout << "left" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_x -= 1;
-                            rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            if(mapArray[p1_y][p1_x] == 4 || mapArray[p1_y][p1_x] == 5) DesAndOpt_p1(p1_x, p1_y, hwnd);
-                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
-
-                            p1_moves--;
-                            passing_arr_p1[p1_y][p1_x] = 1;
+                            UpDownLeftRight(1, hwnd);
                             break;
                         }
                         else break;
@@ -556,13 +767,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             cout << "right" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
                             p1_x += 1;
-                            rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            if(mapArray[p1_y][p1_x] == 4 || mapArray[p1_y][p1_x] == 5) DesAndOpt_p1(p1_x, p1_y, hwnd);
-                            DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
-
-                            p1_moves--;
-                            passing_arr_p1[p1_y][p1_x] = 1;
+                            UpDownLeftRight(1, hwnd);
                             break;
                         }
                         else break;
@@ -589,11 +794,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             cout << "W pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_y -= 1;
-                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
-                            rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            p2_moves--;
-                            passing_arr_p2[p2_y][p2_x] = 1;
+                            UpDownLeftRight(2, hwnd);
                             break;
                         }
                         else break;
@@ -604,11 +805,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             cout << "S pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_y += 1;
-                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
-                            rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            p2_moves--;
-                            passing_arr_p2[p2_y][p2_x] = 1;
+                            UpDownLeftRight(2, hwnd);
                             break;
                         }
                         else break;
@@ -620,11 +817,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             cout << "A pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_x -= 1;
-                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
-                            rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            p2_moves--;
-                            passing_arr_p2[p2_y][p2_x] = 1;
+                            UpDownLeftRight(2, hwnd);
                             break;
                         }
                         else break;
@@ -636,11 +829,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             cout << "D pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
                             p2_x += 1;
-                            DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
-                            rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
-                            FillRect(hdc, &rect, blackBrush);
-                            p2_moves--;
-                            passing_arr_p2[p2_y][p2_x] = 1;
+                            UpDownLeftRight(2, hwnd);
                             break;
                         }
                         else break;
@@ -654,13 +843,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     isInitialDrawDone = 0;
                     // Reset moves for the next player
 
-                    // clear all
-                    RECT clientRect;
-                    GetClientRect(hwnd, &clientRect);
-                    FillRect(hdc, &clientRect, blackBrush);
-
                     p1_moves = int(generateRandomNumber(2, 6) * moveChange_p1);
                     p2_moves = int(generateRandomNumber(2, 6) * moveChange_p1);
+
+                    moveChange_p1 = 1;
+                    moveChange_p2 = 1;
 
                     printOutAll(hwnd);
 
@@ -677,11 +864,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             }
                         }
                     }
-
-//                    for(int i = 0 ; i < p1_moves ; i++)
-//                    {
-//                        DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 40, hIcon_player1);
-//                    }
 
                     passing_arr_p1[p1_y][p1_x] = 1;
                     passing_arr_p2[p2_y][p2_x] = 1;
@@ -709,17 +891,14 @@ int main()
     mapArray = new int*[Width + 1];
     passing_arr_p1 = new int*[Width + 1];
     passing_arr_p2 = new int*[Width + 1];
-    //desAndOpt = new int*[Width + 1];
     for (int i = 0; i < Width + 1; i++) {
         mapArray[i] = new int[Length + 1];
         passing_arr_p1[i] = new int[Length + 1];
         passing_arr_p2[i] = new int [Length + 1];
-        //desAndOpt[i] = new int[Length + 1];
         for (int j = 0; j < Length + 1; j++) {
             mapArray[i][j] = 0; // 初始化陣列值為 0
             passing_arr_p1[i][j] = 0;
             passing_arr_p2[i][j] = 0;
-            //desAndOpt[i][j] = 0;
         }
     }
     //建立地圖
@@ -781,16 +960,20 @@ int main()
             }
         }
     //Test
-    mapArray[4][4] = 4;
+    //mapArray[4][4] = 4;
     mapArray[5][5] = 5;
+    mapArray[3][4] = 5;
+    mapArray[3][6] = 5;
+    mapArray[3][8] = 5;
+    mapArray[6][7] = 5;
+    mapArray[6][3] = 5;
+    mapArray[8][2] = 5;
     for (int i = 1; i <= Width; i++) {
             for (int j = 1; j <= Length; j++) {
                 cout << mapArray[i][j] << " ";
             }
             cout << endl;
         }
-
-    //desAndOpt[1][2] = 1;
     ///----------------------------------
 
     ShowCursor(FALSE);
@@ -836,11 +1019,9 @@ int main()
         delete[] mapArray[i];
         delete[] passing_arr_p1[i];
         delete[] passing_arr_p2[i];
-        //delete[] desAndOpt[i];
     }
     delete[] mapArray;
     delete[] passing_arr_p1;
     delete[] passing_arr_p2;
-    //delete[] desAndOpt;
     return 0;
 }
