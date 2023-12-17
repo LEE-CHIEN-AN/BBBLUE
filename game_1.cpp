@@ -16,7 +16,8 @@ HICON hIcon_water = (HICON)LoadImage(NULL, L"water_try.ico", IMAGE_ICON, 0, 0, L
 HICON hIcon_rock = (HICON)LoadImage(NULL, L"rock_try.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 HICON hIcon_flag = (HICON)LoadImage(NULL, L"flag.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 HICON hIcon_location = (HICON)LoadImage(NULL, L"location.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
-HICON hIcon_des = (HICON)LoadImage(NULL, L"snowman (1).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_opportunity = (HICON)LoadImage(NULL, L"opportunity.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_destiny = (HICON)LoadImage(NULL, L"destiny.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 
 // Brushes
 HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
@@ -29,28 +30,112 @@ HBRUSH rockBrush = CreateSolidBrush(RGB(192, 192, 192));
 
 ///--------------------------
 
-// 方格的種類
-enum TileType {
-    GRASS, // 草地
-    WATER, // 水域
-    ROCK   // 岩石
+class Character {
+protected:
+    int dice[6];  // 六面骰子的值
+    string name;  // 角色名稱
+    string introduction;  // 角色介紹
+public:
+    // 构造函数
+    Character(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string intro) {
+        name = theName;
+        dice[0] = d1; dice[1] = d2; dice[2] = d3;
+        dice[3] = d4; dice[4] = d5; dice[5] = d6;
+        introduction = intro;
+    }
+
+    // 獲取骰子數字
+    int getDiceNum() {
+        srand(static_cast<unsigned int>(time(0))); // 注意：理想情況下，srand應該在程序開始時只調用一次。
+        int index = rand() % 6;
+        return dice[index];
+    }
+    virtual void display() = 0; // 純虛擬函數，用於顯示角色資訊
+    virtual void upgrade() = 0; // 純虛擬函數，用於升級角色
 };
 
+class Teacher : public Character {
+private:
+    string subjectTaught;  // 教授科目
+    int yearsOfExperience; // 教學經驗年數
+public:
+    // 教師构造函数
+    Teacher(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string intro, string subject, int experience)
+    : Character(theName, d1, d2, d3, d4, d5, d6, intro), subjectTaught(subject), yearsOfExperience(experience)
+    {}
+
+    // 重寫display函數
+    void display() override {
+        cout << "Name: " << name << "\nIntroduction: " << introduction;
+        cout << "\nSubject Taught: " << subjectTaught << "\nYears of Experience: " << yearsOfExperience;
+        cout << "\nDice: ";
+        for (int i = 0; i < 6; ++i) {
+            cout << dice[i] << " ";
+        }
+        cout << "\n\n";
+    }
+
+    // 重寫upgradeFunction函數
+    void upgrade() override {
+        for (int& die : dice) {
+            die += yearsOfExperience / 5; // 根據經驗年數增加骰子的值
+        }
+    }
+};
+
+class Student : public Character {
+private:
+    int grade;           // 年級
+    string majorSubject; // 主修科目
+public:
+    // 學生构造函数
+    Student(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string intro, int grade, string major)
+    : Character(theName, d1, d2, d3, d4, d5, d6, intro), grade(grade), majorSubject(major)
+    {}
+
+    // 重寫displa函數
+    void display() override {
+        cout << "Name: " << name << "\nIntroduction: " << introduction;
+        cout << "\nGrade: " << grade << "\nMajor Subject: " << majorSubject;
+        cout << "\nDice: ";
+        for (int i = 0; i < 6; ++i) {
+            cout << dice[i] << " ";
+        }
+        cout << "\n\n";
+    }
+
+
+    // 重寫upgradeFunction函數
+    void upgrade() override {
+        srand(static_cast<unsigned int>(time(0)));
+        int index = rand() % 6;
+        dice[index] += grade / 10; // 根據分數增加隨機一個骰子的值
+    }
+};
+
+///--------------------------
+
+//方格的種類
+enum TileType {
+    GRASS,
+    WATER,
+    ROCK,
+    OPPORTUNITY,
+    FATE
+};
 struct Vector{
     int x;
     int y;
 };
 
-// 生成隨機數字的函數
 int generateRandomNumber(int minValue, int maxValue) {
     return rand() % (maxValue - minValue + 1) + minValue;
 }
 
-#pragma region Tile// Tile 類別代表地圖上的單個方格
+//這是個別的方格
 class Tile {
 private:
-    TileType type; // 方格的類型
-
+    TileType type;
 public:
     Tile(TileType type){
         this->type = type;
@@ -61,23 +146,24 @@ public:
     }
     void setTile(TileType type){
         this->type = type;
+        return;
     }
 };
-#pragma endregion
 
-#pragma region TileMap// TileMap 類別代表整個地圖
+//生成地圖
+template <typename T>
 class TileMap {
 private:
-    int width;       // 地圖寬度
-    int length;      // 地圖長度
-    Tile*** TileMapObject; // 二維陣列，儲存地圖上的每個方格
-
+    int width;
+    int length;
+    int obstacleCnt;
+    Tile*** TileMapObject;
 public:
     TileMap(int width, int length){
         this->width = width;
         this->length = length;
+        this->obstacleCnt = 0.1*(length*width);
 
-        // 初始化地圖陣列
         TileMapObject = new Tile** [length];
         for (int i = 0; i < length; i++){
             TileMapObject[i] = new Tile* [width];
@@ -88,7 +174,6 @@ public:
         srand(static_cast<unsigned>(time(0)));
     }
     ~TileMap() {
-        // 清理記憶體
         for (int i = 0; i < length; i++) {
             for (int j = 0; j < width; j++) {
                 delete TileMapObject[i][j];
@@ -98,37 +183,36 @@ public:
         delete[] TileMapObject;
     }
 
-    // 獲取指定位置的方格類型
     TileType getTileType(int x, int y) const {
-        return TileMapObject[y][x]->getTile();
-    }
+            return TileMapObject[y][x]->getTile();
+        }
 
-    // 設置指定位置的方格類型
     void setTileType(int x, int y, TileType type) {
-        TileMapObject[y][x]->setTile(type);
-    }
+            TileMapObject[y][x]->setTile(type);
+        }
 
-    // 打印地圖到控制台
     void printTileMap() const {
         for (int i = 0; i < length; i++) {
             for (int j = 0; j < width; j++) {
                 switch (getTileType(j, i)) {
                     case GRASS:
-                        cout << " 1 "; break;
+                        cout << " G "; break;
                     case WATER:
-                        cout << " 2 "; break;
+                        cout << " W "; break;
                     case ROCK:
-                        cout << " 3 "; break;
+                        cout << " R "; break;
+                    case OPPORTUNITY:
+                        cout << " O "; break;
+                    case FATE:
+                        cout << " F "; break;
+                    }
                 }
+                cout << endl;
             }
-            cout << endl;
         }
-    }
-
-    // 生成水域
     void generateWaterMass() {
-        int waterMassWidth = rand() % 3 + 2; // 水域寬度
-        int waterMassLength = rand() % 3 + 2; // 水域長度
+        int waterMassWidth = rand() % 3 + 2; // 在[2,4]之間取一個隨機數字當水池寬度
+        int waterMassLength = rand() % 3 + 2;
 
         int startX = rand() % (width - waterMassWidth + 1);
         int startY = rand() % (length - waterMassLength + 1);
@@ -142,8 +226,6 @@ public:
             }
         }
     }
-
-    // 隨機生成岩石
     void randomRocks(int rockCnt) {
         for (int i = 0; i < rockCnt; i++) {
             int x = rand() % width;
@@ -157,8 +239,19 @@ public:
             }
         }
     }
+    void randomTiles(int tileCnt, T targetType) {
+        for (int i = 0; i < tileCnt; i++) {
+            int x = rand() % width;
+            int y = rand() % length;
+
+            if (getTileType(x, y) == GRASS) {
+                setTileType(x, y, targetType);
+            } else {
+                i--;
+            }
+        }
+    }
 };
-#pragma endregion
 
 int** mapArray; // 儲存地圖數據的陣列
 
@@ -182,8 +275,6 @@ int pixel = 32;
 int** passing_arr_p1;
 int** passing_arr_p2;
 
-//int** desAndOpt;
-
 int currentCharacter = 0;
 
 bool isGameStarted = false;
@@ -193,6 +284,24 @@ double moveChange_p1 = 1, moveChange_p2 = 1;
 wchar_t* stepText_p1;
 wchar_t* stepText_p2;
 wchar_t* condition_text;
+
+const int NumBlocks = 6;
+const wchar_t* blockDescriptions[NumBlocks] = {
+    L"grass : Can walk ~ ~ ~",
+    L"water : Can't walk ! ! !",
+    L"rock : Be careful! Don't step on it !",
+    L"opportunity : Change steps ( maybe better off , maybe worse off )",
+    L"destiny : add or remove rocks",
+    L"NOTICE : If there's no way to go, you may be transferred to a random place !"
+};
+HICON blockIcon[NumBlocks] = {
+    hIcon_grass,
+    hIcon_water,
+    hIcon_rock,
+    hIcon_opportunity,
+    hIcon_destiny,
+    hIcon_location
+};
 
 int conditionTextCnt = 0;
 
@@ -208,7 +317,11 @@ void HandleTimer(HWND hwnd, wchar_t* displayText)
     currentCharacter++; // 增加字符index
 
     // 如果所有字符都已經顯示，停止定時器
-    if (currentCharacter >= wcslen(displayText)) KillTimer(hwnd, 1);   // 停止定時器
+    if (currentCharacter >= wcslen(displayText))
+    {
+        KillTimer(hwnd, 1);   // 停止定時器
+        text = L"";
+    }
     ReleaseDC(hwnd, hdc);
 }
 
@@ -240,6 +353,8 @@ void printOutAll(HWND hwnd)
             if(mapArray[j][i] == 1) DrawIcon(hdc, i * pixel, j * pixel, hIcon_grass);
             else if(mapArray[j][i] == 2) DrawIcon(hdc, i * pixel, j * pixel, hIcon_water);
             else if(mapArray[j][i] == 3) DrawIcon(hdc, i * pixel, j * pixel, hIcon_rock);
+            else if(mapArray[j][i] == 4) DrawIcon(hdc, i * pixel, j * pixel, hIcon_opportunity);
+            else if(mapArray[j][i] == 5) DrawIcon(hdc, i * pixel, j * pixel, hIcon_destiny);
         }
     }
 
@@ -265,9 +380,17 @@ void printOutAll(HWND hwnd)
     SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
     TextOutW(hdc, (Length + 2) * pixel + 10, 40, stepText_p1, static_cast<int>(wcslen(stepText_p1)));
     TextOutW(hdc, (Length + 2) * pixel + 10, 90, stepText_p2, static_cast<int>(wcslen(stepText_p2)));
+
+    wchar_t* blockDescription = L"Block Description : ";
+    TextOutW(hdc, pixel + 10, (Width + 2) * pixel + 15, blockDescription, static_cast<int>(wcslen(blockDescription)));
     for(int i = 0 ; i < p1_moves ; i++)
     {
         DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 40, hIcon_player1);
+    }
+    for(int i = 0; i < NumBlocks; ++i)
+    {
+        DrawIcon(hdc, pixel + 10, (Width + 2) * pixel + 10 + (i+1) * pixel + i * 10, blockIcon[i]);
+        TextOutW(hdc, pixel * 2 + 20, (Width + 2) * pixel + 10 + (i+1) * pixel + 10 + i * 10, blockDescriptions[i], static_cast<int>(wcslen(blockDescriptions[i])));
     }
 }
 
@@ -613,8 +736,11 @@ void UpDownLeftRight(int player, HWND hwnd)
     HDC hdc = GetDC(hwnd);
     if(player == 1)
     {
-        rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
-        FillRect(hdc, &rect, blackBrush);
+        if(p1_moves > 0)
+        {
+            rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
+            FillRect(hdc, &rect, blackBrush);
+        }
         if(mapArray[p1_y][p1_x] == 4 || mapArray[p1_y][p1_x] == 5) DesAndOpt_p1(p1_x, p1_y, hwnd);
         DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
         p1_moves--;
@@ -628,8 +754,11 @@ void UpDownLeftRight(int player, HWND hwnd)
     }
     else if(player == 2)
     {
-        rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
-        FillRect(hdc, &rect, blackBrush);
+        if(p2_moves > 0)
+        {
+            rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
+            FillRect(hdc, &rect, blackBrush);
+        }
         if(mapArray[p2_y][p2_x] == 4 || mapArray[p2_y][p2_x] == 5) DesAndOpt_p2(p2_x, p2_y, hwnd);
         DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_player2);
         p2_moves--;
@@ -658,7 +787,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_TIMER:
         {
-            HandleTimer(hwnd, text);
+            if(!isGameStarted)HandleTimer(hwnd, text);
             break;
         }
         case WM_PAINT:
@@ -682,10 +811,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             else if(isGameStarted)
             {
-                currentCharacter = 0;
-                text = L"Please choose small (press 1)";
-                SetTimer(hwnd, 1, 30, NULL);
-
                 // Check if initial drawing is done
                 if (!isInitialDrawDone) {
                     printOutAll(hwnd);
@@ -726,7 +851,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 switch (wParam)
                 {
                     case VK_UP:
-                        if(p1_y > 1 && passing_arr_p1[p1_y - 1][p1_x] == 0)
+                        if(p1_y > 1 && passing_arr_p1[p1_y - 1][p1_x] == 0 && p1_moves > 0)
                         {
                             cout << "up" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
@@ -738,7 +863,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
                     case VK_DOWN:
-                        if(p1_y < Width && passing_arr_p1[p1_y + 1][p1_x] == 0)
+                        if(p1_y < Width && passing_arr_p1[p1_y + 1][p1_x] == 0 && p1_moves > 0)
                         {
                             cout << "down" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
@@ -750,7 +875,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
                     case VK_LEFT:
-                        if(p1_x > 1 && passing_arr_p1[p1_y][p1_x - 1] == 0)
+                        if(p1_x > 1 && passing_arr_p1[p1_y][p1_x - 1] == 0 && p1_moves > 0)
                         {
                             cout << "left" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
@@ -762,7 +887,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
                     case VK_RIGHT:
-                        if(p1_x < Length && passing_arr_p1[p1_y][p1_x + 1] == 0)
+                        if(p1_x < Length && passing_arr_p1[p1_y][p1_x + 1] == 0 && p1_moves > 0)
                         {
                             cout << "right" << endl;
                             DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_flag);
@@ -775,7 +900,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     default:
                         break;
                 }
-                if(p1_moves == 0)
+                if(p1_moves <= 0) // 當p1是0步時，要再多按一下
                 {
                     currentPlayer = 2;
                     for(int i = 0 ; i < p2_moves ; i++)
@@ -789,7 +914,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 switch (wParam)
                 {
                     case 'W':
-                        if(p2_y > 1 && passing_arr_p2[p2_y - 1][p2_x] == 0)
+                        if(p2_y > 1 && passing_arr_p2[p2_y - 1][p2_x] == 0 && p2_moves > 0)
                         {
                             cout << "W pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
@@ -800,7 +925,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         else break;
 
                     case 'S':
-                        if(p2_y < Width && passing_arr_p2[p2_y + 1][p2_x] == 0)
+                        if(p2_y < Width && passing_arr_p2[p2_y + 1][p2_x] == 0 && p2_moves > 0)
                         {
                             cout << "S pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
@@ -812,7 +937,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
                     case 'A':
-                        if(p2_x > 1 && passing_arr_p2[p2_y][p2_x - 1] == 0)
+                        if(p2_x > 1 && passing_arr_p2[p2_y][p2_x - 1] == 0 && p2_moves > 0)
                         {
                             cout << "A pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
@@ -824,7 +949,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
                     case 'D':
-                        if(p2_x < Length && passing_arr_p2[p2_y][p2_x + 1] == 0)
+                        if(p2_x < Length && passing_arr_p2[p2_y][p2_x + 1] == 0 && p2_moves > 0)
                         {
                             cout << "D pressed" << endl;
                             DrawIcon(hdc, p2_x * pixel, p2_y * pixel, hIcon_flag);
@@ -837,21 +962,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     default:
                         break;
                 }
-                if(p2_moves == 0)
+                if(p2_moves <= 0)
                 {
                     // Switch turns after a move
                     isInitialDrawDone = 0;
                     // Reset moves for the next player
 
                     p1_moves = int(generateRandomNumber(2, 6) * moveChange_p1);
-                    p2_moves = int(generateRandomNumber(2, 6) * moveChange_p1);
-
-                    moveChange_p1 = 1;
-                    moveChange_p2 = 1;
+                    p2_moves = int(generateRandomNumber(2, 6) * moveChange_p2);
 
                     printOutAll(hwnd);
 
                     currentPlayer = 1;
+                    if(moveChange_p1 == 0)
+                    {
+                        currentPlayer = 2;
+                        for(int i = 0 ; i < p2_moves ; i++)
+                        {
+                            DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 90, hIcon_player2);
+                        }
+                    }
+
+                    moveChange_p1 = 1;
+                    moveChange_p2 = 1;
 
                     for(int i = 1 ; i <= Width ; i++)
                     {
@@ -901,8 +1034,52 @@ int main()
             passing_arr_p2[i][j] = 0;
         }
     }
+    ///--------------------------------
+
+    // 創建不同類型的 Teacher 和 Student
+    Teacher mathTeacher("Mr. Smith", 2, 3, 4, 5, 6, 7, "Math Genius", "Math", 10);
+    Student mathStudent("Alice", 1, 2, 3, 4, 5, 6, "Avid Learner", 65, "Math");
+
+    Teacher historyTeacher("Mrs. Jones", 1, 3, 4, 4, 4, 6, "History Expert", "History", 8);
+    Student historyStudent("Bob", 1, 3, 3, 3, 4, 6, "History Buff", 90, "History");
+
+    Teacher scienceTeacher("Dr. Brown", 2, 2, 3, 5, 5, 6, "Science Wizard", "Science", 15);
+    Student scienceStudent("Carol", 2, 2, 3, 4, 4, 5, "Science Enthusiast", 75, "Science");
+
+    // 顯示初始狀態
+    cout << "Initial State:\n";
+    mathTeacher.display();
+    mathStudent.display();
+    historyTeacher.display();
+    historyStudent.display();
+    scienceTeacher.display();
+    scienceStudent.display();
+
+    // 執行升級
+    cout << "\nAfter Upgrades:\n";
+    mathTeacher.upgrade();
+    mathStudent.upgrade();
+    historyTeacher.upgrade();
+    historyStudent.upgrade();
+    scienceTeacher.upgrade();
+    scienceStudent.upgrade();
+
+    // 顯示升級後的狀態
+    mathTeacher.display();
+    mathStudent.display();
+    historyTeacher.display();
+    historyStudent.display();
+    scienceTeacher.display();
+    scienceStudent.display();
+
+    ///--------------------------------
+
+//    //建立地圖
+//    TileMap myTileMap(Length + 1, Width + 1);
+
     //建立地圖
-    TileMap myTileMap(Length + 1, Width + 1);
+    TileMap<TileType> myTileMap(Length + 1, Width + 1);
+    //TileMap<TileType> chanceMap(width, length);
 
     for (int i = 1; i <= Width; i++) {
         for (int j = 1; j <= Length; j++) {
@@ -920,8 +1097,14 @@ int main()
     //加入岩石
     int rockCnt = generateRandomNumber(static_cast<int>(Length * Width * 0.05),
                                        static_cast<int>(Length * Width * 0.1));
+    int oppCnt = generateRandomNumber(static_cast<int>((Length * Width) * 0.02),
+                                      static_cast<int>((Length * Width) * 0.05));
+    int fateCnt = generateRandomNumber(static_cast<int>((Length * Width) * 0.02),
+                                      static_cast<int>((Length * Width) * 0.05));
     //cout << rockCnt << endl;
     myTileMap.randomRocks(rockCnt);
+    myTileMap.randomTiles(oppCnt, OPPORTUNITY);
+    myTileMap.randomTiles(fateCnt, FATE);
 
     for (int i = 1; i <= Width; i++){
         for (int j = 1; j <= Length; j++){
@@ -950,24 +1133,24 @@ int main()
                         passing_arr_p1[i][j] = 1;
                         passing_arr_p2[i][j] = 1;
                         break;
-//                    case []:
-//                        mapArray[i][j] = 4;
-//                        desAndOpt[i][j] = 1; // des
-//                    case []:
-//                        mapArray[i][j] = 5;
-//                        desAndOpt[i][j] = 2; // opt
+                    case OPPORTUNITY:
+                        mapArray[i][j] = 4;
+                        break;
+                    case FATE:
+                        mapArray[i][j] = 5;
+                        break;
                 }
             }
         }
-    //Test
-    //mapArray[4][4] = 4;
-    mapArray[5][5] = 5;
-    mapArray[3][4] = 5;
-    mapArray[3][6] = 5;
-    mapArray[3][8] = 5;
-    mapArray[6][7] = 5;
-    mapArray[6][3] = 5;
-    mapArray[8][2] = 5;
+//    //Test
+//    //mapArray[4][4] = 4;
+//    mapArray[5][5] = 5;
+//    mapArray[3][4] = 5;
+//    mapArray[3][6] = 5;
+//    mapArray[3][8] = 5;
+//    mapArray[6][7] = 5;
+//    mapArray[6][3] = 5;
+//    mapArray[8][2] = 5;
     for (int i = 1; i <= Width; i++) {
             for (int j = 1; j <= Length; j++) {
                 cout << mapArray[i][j] << " ";
