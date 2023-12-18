@@ -1390,7 +1390,7 @@ int main()
     //建立地圖
     TileMap<TileType> myTileMap(Length + 1, Width + 1);
     //TileMap<TileType> chanceMap(width, length);
-
+    //初始化地圖為草地
     for (int i = 1; i <= Width; i++) {
         for (int j = 1; j <= Length; j++) {
             myTileMap.setTileType(j, i, GRASS);
@@ -1407,8 +1407,10 @@ int main()
     //加入岩石
     int rockCnt = generateRandomNumber(static_cast<int>(Length * Width * 0.05),
                                        static_cast<int>(Length * Width * 0.1));
+    //加入機會
     int oppCnt = generateRandomNumber(static_cast<int>((Length * Width) * 0.02),
                                       static_cast<int>((Length * Width) * 0.05));
+    //加入命運
     int fateCnt = generateRandomNumber(static_cast<int>((Length * Width) * 0.02),
                                       static_cast<int>((Length * Width) * 0.05));
     //cout << rockCnt << endl;
@@ -1426,7 +1428,7 @@ int main()
     }
 
     myTileMap.printTileMap();
-
+    //將地圖資訊儲存成int陣列中
     for (int i = 1; i <= Width; i++) {
             for (int j = 1; j <= Length; j++) {
                 switch (myTileMap.getTileType(j, i)) {
