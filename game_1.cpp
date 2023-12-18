@@ -19,6 +19,16 @@ HICON hIcon_location = (HICON)LoadImage(NULL, L"location.ico", IMAGE_ICON, 0, 0,
 HICON hIcon_opportunity = (HICON)LoadImage(NULL, L"opportunity.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 HICON hIcon_destiny = (HICON)LoadImage(NULL, L"destiny.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 
+HICON hIcon_CLJ = (HICON)LoadImage(NULL, L"CLJ.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_CUZ = (HICON)LoadImage(NULL, L"CUZ.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_CJJ = (HICON)LoadImage(NULL, L"CJJ.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_CGR = (HICON)LoadImage(NULL, L"CGR.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_YRH = (HICON)LoadImage(NULL, L"YRH.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_ATA = (HICON)LoadImage(NULL, L"ATA.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_PTA = (HICON)LoadImage(NULL, L"PTA.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_bigStupidBird = (HICON)LoadImage(NULL, L"BSB.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+HICON hIcon_bigGoose = (HICON)LoadImage(NULL, L"BG.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+
 // Brushes
 HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
 HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
@@ -29,19 +39,16 @@ HBRUSH waterBrush = CreateSolidBrush(RGB(0, 255, 255));
 HBRUSH rockBrush = CreateSolidBrush(RGB(192, 192, 192));
 
 ///--------------------------
-
 class Character {
 protected:
     int dice[6];  // 六面骰子的值
     string name;  // 角色名稱
-    string introduction;  // 角色介紹
 public:
     // 构造函数
-    Character(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string intro) {
+    Character(string theName, int d1, int d2, int d3, int d4, int d5, int d6) {
         name = theName;
         dice[0] = d1; dice[1] = d2; dice[2] = d3;
         dice[3] = d4; dice[4] = d5; dice[5] = d6;
-        introduction = intro;
     }
 
     // 獲取骰子數字
@@ -60,13 +67,13 @@ private:
     int yearsOfExperience; // 教學經驗年數
 public:
     // 教師构造函数
-    Teacher(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string intro, string subject, int experience)
-    : Character(theName, d1, d2, d3, d4, d5, d6, intro), subjectTaught(subject), yearsOfExperience(experience)
+    Teacher(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string subject, int experience)
+    : Character(theName, d1, d2, d3, d4, d5, d6), subjectTaught(subject), yearsOfExperience(experience)
     {}
 
     // 重寫display函數
     void display() override {
-        cout << "Name: " << name << "\nIntroduction: " << introduction;
+        cout << "Name: " << name;
         cout << "\nSubject Taught: " << subjectTaught << "\nYears of Experience: " << yearsOfExperience;
         cout << "\nDice: ";
         for (int i = 0; i < 6; ++i) {
@@ -89,13 +96,13 @@ private:
     string majorSubject; // 主修科目
 public:
     // 學生构造函数
-    Student(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string intro, int grade, string major)
-    : Character(theName, d1, d2, d3, d4, d5, d6, intro), grade(grade), majorSubject(major)
+    Student(string theName, int d1, int d2, int d3, int d4, int d5, int d6, string major,int grade)
+    : Character(theName, d1, d2, d3, d4, d5, d6), grade(grade), majorSubject(major)
     {}
 
     // 重寫displa函數
     void display() override {
-        cout << "Name: " << name << "\nIntroduction: " << introduction;
+        cout << "Name: " << name;
         cout << "\nGrade: " << grade << "\nMajor Subject: " << majorSubject;
         cout << "\nDice: ";
         for (int i = 0; i < 6; ++i) {
@@ -112,6 +119,32 @@ public:
         dice[index] += grade / 10; // 根據分數增加隨機一個骰子的值
     }
 };
+
+const int characterNum = 9;
+
+Character* characters[characterNum]; // 全域的一維 Character 陣列
+
+void initializeCharacters() {
+    // 初始化 characters 陣列，例如：
+    characters[0] = new Teacher("小傑老師", 1, 2, 3, 4, 5, 6, "PDOGS!", 15);
+    characters[1] = new Teacher("莊老師", 3, 3, 3, 4, 4, 4, "莊大刀!", 32);
+    characters[2] = new Teacher("建錦主任", 1, 1, 1, 3, 5, 10, "笑容攻擊!", 21);
+    characters[3] = new Teacher("國榮老師", 1, 1, 3, 4, 6, 6, "Laplace Transform", 17);
+    characters[4] = new Teacher("尤老師", 2, 2, 2, 3, 6, 6, "LIFO", 24);
+
+    characters[5] = new Student("會計助教", 1, 2, 3, 4, 5, 6, "要做Assignment3喔~", 99);
+    characters[6] = new Student("程設助教", 3, 3, 3, 4, 4, 4, "隨便寫都比你強!", 88);
+    characters[7] = new Student("大笨鳥", 2, 2, 2, 3, 6, 6, "(你笨選到這個)", 32);
+    characters[8] = new Student("醉月湖大鵝", 1, 1, 1, 3, 5, 10, "午餐我來了!", 67);
+
+}
+
+void cleanupCharacters() {
+    // 釋放 characters 陣列中的記憶體
+    for (int i = 0; i < characterNum; ++i) {
+        delete characters[i];
+    }
+}
 
 ///--------------------------
 
@@ -257,14 +290,16 @@ int** mapArray; // 儲存地圖數據的陣列
 
 ///---------------------------
 
+int p1_character = 0, p2_character = 1;
+
 int cnt_UpDown = 0;
 int cnt_LeftRight = 0;
 
 int cnt_UpDown_player2 = 100;
 int cnt_LeftRight_player2 = 100;
 
-int p1_x = 1, p1_y = 1, p1_moves = generateRandomNumber(2, 6);
-int p2_x = Length, p2_y = Width, p2_moves = generateRandomNumber(2, 6);
+int p1_x = 1, p1_y = 1, p1_moves = 0;
+int p2_x = Length, p2_y = Width, p2_moves = 0;
 
 bool isInitialDrawDone = false;
 
@@ -278,12 +313,76 @@ int** passing_arr_p2;
 int currentCharacter = 0;
 
 bool isGameStarted = false;
+bool isLogo = false;
 
 double moveChange_p1 = 1, moveChange_p2 = 1;
 
 wchar_t* stepText_p1;
 wchar_t* stepText_p2;
 wchar_t* condition_text;
+wchar_t* upgrade_p1;
+wchar_t* upgrade_p2;
+
+const int NumDice = 9;
+wchar_t* diceDescriptions[NumDice] = {
+    L"(1, 2, 3, 4, 5, 6)",
+    L"(3, 3, 3, 4, 4, 4)",
+    L"(1, 1, 1, 3, 5, 10)",
+    L"(1, 1, 3, 4, 6, 6)",
+    L"(2, 2, 2, 3, 6, 6)",
+    L"(1, 2, 3, 4, 5, 6)",
+    L"(3, 3, 3, 4, 4, 4)",
+    L"(2, 2, 2, 3, 6, 6)",
+    L"(1, 1, 1, 3, 5, 10)"
+};
+wchar_t* upgradeDescriptions[NumDice] = {
+    L"PDOGS!  骰子點數都+3",
+    L"莊大刀!  骰子點數都+6",
+    L"笑容攻擊!  骰子點數都+3",
+    L"Laplace Transform  骰子點數都+3",
+    L"LIFO  骰子點數都+3",
+    L"要做Assignment3喔~  一面骰子點數+3",
+    L"隨便寫都比你強!  一面骰子點數+3",
+    L"(你笨選到這個)  一面骰子點數+3",
+    L"午餐我來了!  一面骰子點數+3"
+};
+/*
+    characters[0] = new Teacher("小傑老師", 1, 2, 3, 4, 5, 6, "PDOGS!", 15);
+    characters[1] = new Teacher("莊老師", 3, 3, 3, 4, 4, 4, "莊大刀!", 32);
+    characters[2] = new Teacher("建錦主任", 1, 1, 1, 3, 5, 10, "笑容攻擊!", 21);
+    characters[3] = new Teacher("國榮老師", 1, 1, 3, 4, 6, 6, "Laplace Transform", 17);
+    characters[4] = new Teacher("尤老師", 2, 2, 2, 3, 6, 6, "LIFO", 24);
+
+    characters[5] = new Student("會計助教", 1, 2, 3, 4, 5, 6, "要做Assignment3喔~", 99);
+    characters[6] = new Student("程設助教", 3, 3, 3, 4, 4, 4, "隨便寫都比你強!", 88);
+    characters[7] = new Student("大笨鳥", 2, 2, 2, 3, 6, 6, "(你笨選到這個)", 32);
+    characters[8] = new Student("醉月湖大鵝", 1, 1, 1, 3, 5, 10, "午餐我來了!", 67);
+*/
+
+
+const int NumCharacters = 9;
+const wchar_t* characterDescriptions[NumCharacters] = {
+    L"小傑老師，動漫愛好者，擁有兩大神獸 pcats 和 pdogs 在手，帶你進入 c++ 世界。",
+    L"莊老師，嚴肅評論家，點評毫不留情，是你成長路上的嚴格導師。",
+    L"建錦主任，常關心同學的主任，笑臉下的犀利點評，讓你感受溫暖與挑戰。",
+    L"國榮老師，突如其來的日語和 diss，將讓你在笑聲中學到更多。",
+    L"尤老師，有什麼比松鼠還要聒噪，喜歡粉紅色的那個女人。",
+    L"會計助教，英雄般的救星，從全英會計課中拯救你，讓你脫離困境。",
+    L"程設助教，為你指點迷津，幫你跳出 TLE、RE、MLE、WA 惡夢的那群英雄。",
+    L"大笨鳥，亂飛亂拉屎，為你帶來校園的不可預測性。",
+    L"醉月湖大鵝，湖邊的驚喜，當心這位校園生物，或許會給你一場驚喜的午餐體驗。"
+};
+HICON characterIcon[NumCharacters] = {
+    hIcon_CLJ,
+    hIcon_CUZ,
+    hIcon_CJJ,
+    hIcon_CGR,
+    hIcon_YRH,
+    hIcon_ATA,
+    hIcon_PTA,
+    hIcon_bigStupidBird,
+    hIcon_bigGoose
+};
 
 const int NumBlocks = 6;
 const wchar_t* blockDescriptions[NumBlocks] = {
@@ -312,7 +411,7 @@ void HandleTimer(HWND hwnd, wchar_t* displayText)
     const wchar_t currentChar = displayText[currentCharacter];
     SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
     SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
-    TextOutW(hdc, pixel + 10 + currentCharacter * 10, (Width + 2) * pixel + 10, &currentChar, 1); // 逐個字符顯示
+    TextOutW(hdc, 1130 + currentCharacter * 10, 830, &currentChar, 1); // 逐個字符顯示
 
     currentCharacter++; // 增加字符index
 
@@ -325,6 +424,18 @@ void HandleTimer(HWND hwnd, wchar_t* displayText)
     ReleaseDC(hwnd, hdc);
 }
 
+int p1_upgradeTime = 0, p2_upgradeTime = 0;
+void printUpgrade(HWND hwnd)
+{
+    HDC hdc = GetDC(hwnd);
+    SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+    SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+    upgrade_p1 = upgradeDescriptions[p1_character];
+    upgrade_p2 = upgradeDescriptions[p2_character];
+    for(int i = 0 ; i < p1_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 150 * (i+1), 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
+    for(int i = 0 ; i < p1_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 150 * (i+1), 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
+}
+
 void printOutAll(HWND hwnd)
 {
     HDC hdc = GetDC(hwnd);
@@ -333,7 +444,7 @@ void printOutAll(HWND hwnd)
     // clear all
     RECT clientRect;
     GetClientRect(hwnd, &clientRect);
-    RECT customRect = {(Length + 2) * pixel, 190, screenWidth-pixel-10, screenHeight-pixel-10};
+    RECT customRect = {(Length + 2) * pixel, 230, screenWidth-pixel-10, screenHeight-pixel-10};
     ExcludeClipRect(hdc, customRect.left, customRect.top, customRect.right, customRect.bottom);
     FillRect(hdc, &clientRect, blackBrush);
 
@@ -368,7 +479,7 @@ void printOutAll(HWND hwnd)
     }
     for (int i = Length + 2; i <= screenWidth/pixel ; i++)
     {
-        DrawIcon(hdc, i * pixel, 150, hIcon_rock);
+        DrawIcon(hdc, i * pixel, 190, hIcon_rock);
     }
 
     DrawIcon(hdc, p1_x * pixel, p1_y * pixel, hIcon_player1);
@@ -379,7 +490,15 @@ void printOutAll(HWND hwnd)
     SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
     SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
     TextOutW(hdc, (Length + 2) * pixel + 10, 40, stepText_p1, static_cast<int>(wcslen(stepText_p1)));
-    TextOutW(hdc, (Length + 2) * pixel + 10, 90, stepText_p2, static_cast<int>(wcslen(stepText_p2)));
+    TextOutW(hdc, (Length + 2) * pixel + 10, 110, stepText_p2, static_cast<int>(wcslen(stepText_p2)));
+
+    wchar_t* dice_p1;
+    wchar_t* dice_p2;
+    dice_p1 = diceDescriptions[p1_character];
+    dice_p2 = diceDescriptions[p2_character];
+    TextOutW(hdc, (Length + 2) * pixel + 10, 75, dice_p1, static_cast<int>(wcslen(dice_p1)));
+    TextOutW(hdc, (Length + 2) * pixel + 10, 145, dice_p2, static_cast<int>(wcslen(dice_p2)));
+    printUpgrade(hwnd);
 
     wchar_t* blockDescription = L"Block Description : ";
     TextOutW(hdc, pixel + 10, (Width + 2) * pixel + 15, blockDescription, static_cast<int>(wcslen(blockDescription)));
@@ -462,7 +581,7 @@ void conditionText(int player, int DandO, int Case, HWND hwnd)
     wchar_t* player1or2;
     if(player == 1) player1or2 = L"player 1 : ";
     else if(player == 2) player1or2 = L"player 2 : ";
-    TextOutW(hdc, (Length + 2) * pixel + 10, 200 + conditionTextCnt * pixel, player1or2, static_cast<int>(wcslen(player1or2)));
+    TextOutW(hdc, (Length + 2) * pixel + 10, 240 + conditionTextCnt * pixel, player1or2, static_cast<int>(wcslen(player1or2)));
 
     if(DandO == 4)
     {
@@ -486,6 +605,9 @@ void conditionText(int player, int DandO, int Case, HWND hwnd)
             case 6:
                 condition_text = L"next steps x 1.5";
                 break;
+            case 7:
+                condition_text = L"upgrade your dice !";
+                break;
         }
     }
     else if(DandO == 5)
@@ -507,18 +629,21 @@ void conditionText(int player, int DandO, int Case, HWND hwnd)
             case 5:
                 condition_text = L"remove all obstacles around you";
                 break;
+            case 6:
+                condition_text = L"upgrade your dice !";
+                break;
             case 10:    // 黑洞傳送
                 condition_text = L"there's no way to go, transfer to a new place.";
                 break;
         }
     }
-    TextOutW(hdc, (Length + 2) * pixel + 100, 200 + conditionTextCnt * pixel, condition_text, static_cast<int>(wcslen(condition_text)));
+    TextOutW(hdc, (Length + 2) * pixel + 100, 240 + conditionTextCnt * pixel, condition_text, static_cast<int>(wcslen(condition_text)));
     conditionTextCnt++;
-    if(conditionTextCnt > 21)
+    if(conditionTextCnt > 20)
     {
         int screenWidth = GetSystemMetrics(SM_CXSCREEN);
         int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-        RECT customRect = {(Length + 2) * pixel, 190, screenWidth-pixel-10, screenHeight-pixel-10};
+        RECT customRect = {(Length + 2) * pixel, 230, screenWidth-pixel-10, screenHeight-pixel-10};
         FillRect(hdc, &customRect, blackBrush);
         conditionTextCnt = 0;
     }
@@ -569,7 +694,7 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
     HDC hdc = GetDC(hwnd);
     if(mapArray[y][x] == 4)
     {
-        int opportunityCase = generateRandomNumber(1, 6); // opportinity機會 : 改變步數
+        int opportunityCase = generateRandomNumber(1, 7); // opportinity機會 : 改變步數
         switch(opportunityCase)
         {
             case 1:
@@ -590,6 +715,14 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
             case 6:
                 moveChange_p1 = 1.5;
                 break;
+            case 7:
+                characters[p1_character]->upgrade();
+                p1_upgradeTime++;
+                SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+                SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+                upgrade_p1 = upgradeDescriptions[p1_character];
+                TextOutW(hdc, (Length + 2) * pixel + 300, 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
+                break;
         }
         mapArray[y][x] = 1;
         DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
@@ -597,7 +730,7 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
     }
     else if(mapArray[y][x] == 5)
     {
-        int destinyCase = generateRandomNumber(1, 5); // destiny命運 : 改變障礙物跟位置
+        int destinyCase = generateRandomNumber(1, 6); // destiny命運 : 改變障礙物跟位置
         int cnt = cntAroundObstacles(1, x, y);
         if(destinyCase == 5)
         {
@@ -631,6 +764,15 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
                     case 4:
                         destinyModule(1, x-1, y, destinyCase, hwnd);
                         break;
+                    case 6:
+                        characters[p1_character]->upgrade();
+                        p1_upgradeTime++;
+                        conditionText(1, 5, destinyCase, hwnd);
+                        SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+                        SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+                        upgrade_p1 = upgradeDescriptions[p1_character];
+                        TextOutW(hdc, (Length + 2) * pixel + 300, 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
+                        break;
                 }
             }
             else if(cnt > 3)
@@ -642,7 +784,7 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
     }
 
     RECT rect;
-    rect = {(Length + 5) * pixel, 40, (Length + 5 + 15) * pixel + 50, 40 + 50};
+    rect = {(Length + 5) * pixel, 40, (Length + 5 + 15) * pixel + 32, 40 + 32};
     FillRect(hdc, &rect, blackBrush);
     p1_moves = 1;
 }
@@ -652,7 +794,7 @@ void DesAndOpt_p2(int x, int y, HWND hwnd)
     HDC hdc = GetDC(hwnd);
     if(mapArray[y][x] == 4)
     {
-        int opportunityCase = generateRandomNumber(1, 6); // opportinity機會 : 改變步數
+        int opportunityCase = generateRandomNumber(1, 7); // opportinity機會 : 改變步數
         switch(opportunityCase)
         {
             case 1:
@@ -673,6 +815,14 @@ void DesAndOpt_p2(int x, int y, HWND hwnd)
             case 6:
                 moveChange_p2 = 1.5;
                 break;
+            case 7:
+                characters[p2_character]->upgrade();
+                p2_upgradeTime++;
+                SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+                SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+                upgrade_p2 = upgradeDescriptions[p2_character];
+                TextOutW(hdc, (Length + 2) * pixel + 300, 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
+                break;
         }
         mapArray[y][x] = 1;
         DrawIcon(hdc, x * pixel, y * pixel, hIcon_grass);
@@ -680,7 +830,7 @@ void DesAndOpt_p2(int x, int y, HWND hwnd)
     }
     else if(mapArray[y][x] == 5)
     {
-        int destinyCase = generateRandomNumber(1, 5); // destiny命運 : 改變障礙物跟位置
+        int destinyCase = generateRandomNumber(1, 6); // destiny命運 : 改變障礙物跟位置
         int cnt = cntAroundObstacles(2, x, y);
         if(destinyCase == 5)
         {
@@ -714,6 +864,15 @@ void DesAndOpt_p2(int x, int y, HWND hwnd)
                     case 4:
                         destinyModule(2, x-1, y, destinyCase, hwnd);
                         break;
+                    case 6:
+                        characters[p2_character]->upgrade();
+                        p2_upgradeTime++;
+                        conditionText(2, 5, destinyCase, hwnd);
+                        SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+                        SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+                        upgrade_p2 = upgradeDescriptions[p2_character];
+                        TextOutW(hdc, (Length + 2) * pixel + 300, 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
+                        break;
                 }
             }
             else if(cnt > 3)
@@ -725,7 +884,7 @@ void DesAndOpt_p2(int x, int y, HWND hwnd)
     }
 
     RECT rect;
-    rect = {(Length + 5) * pixel, 90, (Length + 5 + 15) * pixel + 50, 90 + 50};
+    rect = {(Length + 5) * pixel, 110, (Length + 5 + 15) * pixel + 32, 110 + 32};
     FillRect(hdc, &rect, blackBrush);
     p2_moves = 1;
 }
@@ -738,7 +897,7 @@ void UpDownLeftRight(int player, HWND hwnd)
     {
         if(p1_moves > 0)
         {
-            rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 50, 40 + 50};
+            rect = {(Length + 5 + p1_moves - 1) * pixel, 40, (Length + 5 + p1_moves - 1) * pixel + 32, 40 + 32};
             FillRect(hdc, &rect, blackBrush);
         }
         if(mapArray[p1_y][p1_x] == 4 || mapArray[p1_y][p1_x] == 5) DesAndOpt_p1(p1_x, p1_y, hwnd);
@@ -756,7 +915,7 @@ void UpDownLeftRight(int player, HWND hwnd)
     {
         if(p2_moves > 0)
         {
-            rect = {(Length + 5 + p2_moves - 1) * pixel, 90, (Length + 5 + p2_moves - 1) * pixel + 50, 90 + 50};
+            rect = {(Length + 5 + p2_moves - 1) * pixel, 110, (Length + 5 + p2_moves - 1) * pixel + 32, 110 + 32};
             FillRect(hdc, &rect, blackBrush);
         }
         if(mapArray[p2_y][p2_x] == 4 || mapArray[p2_y][p2_x] == 5) DesAndOpt_p2(p2_x, p2_y, hwnd);
@@ -798,19 +957,142 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
-            if (!isGameStarted) //起始畫面
+            if (!isLogo)
             {
                 // 設置黑色背景
                 RECT clientRect;
                 GetClientRect(hwnd, &clientRect);
                 FillRect(hdc, &clientRect, blackBrush);
 
+                int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+                int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+                for (int i = 0; i <= screenWidth/pixel; i++)
+                {
+                    DrawIcon(hdc, i * pixel, 0, hIcon_rock);
+                    DrawIcon(hdc, i * pixel, screenHeight-pixel, hIcon_rock);
+                }
+                for (int j = 0; j <= screenHeight/pixel; j++)
+                {
+                    DrawIcon(hdc, 0, j * pixel, hIcon_rock);
+                    DrawIcon(hdc, screenWidth-pixel, j * pixel, hIcon_rock);
+                }
+
+
+                int LeftPixel = 300, UpPixel = 350;
+                for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+96, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+128, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+
+                LeftPixel = 450; UpPixel = 350;
+                for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+96, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+128, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+
+                LeftPixel = 600; UpPixel = 350;
+                for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+96, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+128, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+
+                LeftPixel = 750; UpPixel = 350;
+                for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                for(int i = 0; i < 3; i++)DrawIcon(hdc, LeftPixel+32*i, UpPixel+128, hIcon_rock);
+
+                LeftPixel = 900-32; UpPixel = 350;
+                for(int i = 0; i < 4; i++)
+                {
+                    DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                    DrawIcon(hdc, LeftPixel+96, UpPixel+32*i, hIcon_rock);
+                }
+                DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+128, hIcon_rock);
+
+                LeftPixel = 1050-32; UpPixel = 350;
+                for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+64, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+64, UpPixel+128, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+128, hIcon_rock);
+
+                SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+                SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+                wchar_t* nameTest = L"Made by 蕭翊璇 藍柏婷 柯絲昀 李捷安";
+                TextOutW(hdc, 550, 550, nameTest, static_cast<int>(wcslen(nameTest)));
+
+                currentCharacter = 0;
+                text = L"Press Enter to continue...";
+                SetTimer(hwnd, 1, 30, NULL);
+            }
+            else if ((!isGameStarted) && isLogo) //起始畫面
+            {
+                // 設置黑色背景
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                FillRect(hdc, &clientRect, blackBrush);
+
+                int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+                int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+                for (int i = 0; i <= screenWidth/pixel; i++)
+                {
+                    DrawIcon(hdc, i * pixel, 0, hIcon_rock);
+                    DrawIcon(hdc, i * pixel, screenHeight-pixel, hIcon_rock);
+                }
+                for (int j = 0; j <= screenHeight/pixel; j++)
+                {
+                    DrawIcon(hdc, 0, j * pixel, hIcon_rock);
+                    DrawIcon(hdc, screenWidth-pixel, j * pixel, hIcon_rock);
+                }
+
+                SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+                SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+                HFONT hFont = CreateFont(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                SelectObject(hdc, hFont);
+                wchar_t* firstTest = L"選擇你的角色，開啟冒險對戰！";
+                TextOutW(hdc, pixel + 15, pixel + 20, firstTest, static_cast<int>(wcslen(firstTest)));
+                for(int i = 0 ; i < NumCharacters ; i++)
+                {
+                    DrawIcon(hdc, 50, 100 + i * (pixel+30), characterIcon[i]);
+                    TextOutW(hdc, 100, 100 + i * (pixel+30) + 5, characterDescriptions[i], static_cast<int>(wcslen(characterDescriptions[i])));
+                }
+
+//                RECT rect = {10, 800, 600, 900}; // 指定文本绘制的区域 (left, top, right, bottom)
+//                wchar_t* text = L"這是使用粗體的文本，這段文本會在指定的區域內自動換行。";
+//
+//                DrawTextW(hdc, text, -1, &rect, DT_WORDBREAK);
+
                 currentCharacter = 0;
                 text = L"Press Enter to start...";
                 SetTimer(hwnd, 1, 30, NULL);
+                //KillTimer(hwnd, 1);
             }
-            else if(isGameStarted)
+            else if(isGameStarted && isLogo)
             {
+                // 設置黑色背景
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                FillRect(hdc, &clientRect, blackBrush);
                 // Check if initial drawing is done
                 if (!isInitialDrawDone) {
                     printOutAll(hwnd);
@@ -836,9 +1118,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 PostQuitMessage(0); // 結束程序
                 ShowCursor(TRUE);   // 顯示鼠標
             }
-            if(wParam == VK_RETURN && isGameStarted == false) { // 假設 Enter 鍵啟動遊戲
+            if(wParam == VK_RETURN && isLogo == false) { // 假設 Enter 鍵關閉遊戲logo
+                isLogo = true;
+                InvalidateRect(hwnd, NULL, TRUE); // 通知窗口需要重新繪製
+            }
+            else if(wParam == VK_RETURN && isLogo == true && isGameStarted == false) { // 假設 Enter 鍵啟動遊戲
                 isGameStarted = true;
                 InvalidateRect(hwnd, NULL, TRUE); // 通知窗口需要重新繪製
+                p1_moves = characters[p1_character]->getDiceNum();
+                p2_moves = characters[p2_character]->getDiceNum();
             }
             swprintf_s(msg, L"WM_KEYDOWN: 0x%x\n", wParam);
             OutputDebugStringW(msg);
@@ -905,7 +1193,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     currentPlayer = 2;
                     for(int i = 0 ; i < p2_moves ; i++)
                     {
-                        DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 90, hIcon_player2);
+                        DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 110, hIcon_player2);
                     }
                 }
             }
@@ -968,8 +1256,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     isInitialDrawDone = 0;
                     // Reset moves for the next player
 
-                    p1_moves = int(generateRandomNumber(2, 6) * moveChange_p1);
-                    p2_moves = int(generateRandomNumber(2, 6) * moveChange_p2);
+                    p1_moves = characters[p1_character]->getDiceNum() * moveChange_p1;
+                    p2_moves = characters[p2_character]->getDiceNum() * moveChange_p2;
 
                     printOutAll(hwnd);
 
@@ -979,7 +1267,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         currentPlayer = 2;
                         for(int i = 0 ; i < p2_moves ; i++)
                         {
-                            DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 90, hIcon_player2);
+                            DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 110, hIcon_player2);
                         }
                     }
 
@@ -1034,43 +1322,7 @@ int main()
             passing_arr_p2[i][j] = 0;
         }
     }
-    ///--------------------------------
-
-    // 創建不同類型的 Teacher 和 Student
-    Teacher mathTeacher("Mr. Smith", 2, 3, 4, 5, 6, 7, "Math Genius", "Math", 10);
-    Student mathStudent("Alice", 1, 2, 3, 4, 5, 6, "Avid Learner", 65, "Math");
-
-    Teacher historyTeacher("Mrs. Jones", 1, 3, 4, 4, 4, 6, "History Expert", "History", 8);
-    Student historyStudent("Bob", 1, 3, 3, 3, 4, 6, "History Buff", 90, "History");
-
-    Teacher scienceTeacher("Dr. Brown", 2, 2, 3, 5, 5, 6, "Science Wizard", "Science", 15);
-    Student scienceStudent("Carol", 2, 2, 3, 4, 4, 5, "Science Enthusiast", 75, "Science");
-
-    // 顯示初始狀態
-    cout << "Initial State:\n";
-    mathTeacher.display();
-    mathStudent.display();
-    historyTeacher.display();
-    historyStudent.display();
-    scienceTeacher.display();
-    scienceStudent.display();
-
-    // 執行升級
-    cout << "\nAfter Upgrades:\n";
-    mathTeacher.upgrade();
-    mathStudent.upgrade();
-    historyTeacher.upgrade();
-    historyStudent.upgrade();
-    scienceTeacher.upgrade();
-    scienceStudent.upgrade();
-
-    // 顯示升級後的狀態
-    mathTeacher.display();
-    mathStudent.display();
-    historyTeacher.display();
-    historyStudent.display();
-    scienceTeacher.display();
-    scienceStudent.display();
+    initializeCharacters();
 
     ///--------------------------------
 
@@ -1198,6 +1450,7 @@ int main()
     #pragma GCC diagnostic pop
 
     // 在程序結束前釋放記憶體
+    cleanupCharacters();
     for (int i = 0; i < Width + 1; i++) {
         delete[] mapArray[i];
         delete[] passing_arr_p1[i];
