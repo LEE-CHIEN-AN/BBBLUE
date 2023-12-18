@@ -1106,7 +1106,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     DrawIcon(hdc, pixel + 10 + 280 * (i%5), pixel * 3 + 45 + 362 * (i/5), characterIcon[i]);   // 繪製icon
                     TextOutW(hdc, pixel + 10 + 280 * (i%5) + 50, pixel * 3 + 45 + 362 * (i/5) + 5, characterName[i], static_cast<int>(wcslen(characterName[i]))); // 輸出名稱
-                    wchar_t* characteristic = L"屬性 : ";
+                    wchar_t* characteristic = L"骰子 : ";
                     TextOutW(hdc, pixel + 10 + 280 * (i%5), pixel * 3 + 45 + 362 * (i/5) + 55, characteristic, static_cast<int>(wcslen(characteristic))); // 屬性
                     TextOutW(hdc, pixel + 10 + 280 * (i%5) + 60, pixel * 3 + 45 + 362 * (i/5) + 55, diceDescriptions[i], static_cast<int>(wcslen(diceDescriptions[i]))); // 輸出屬性
                     RECT textRect = { pixel + 10 + 280 * (i%5), pixel * 3 + 45 + 362 * (i/5) + 120, pixel + 10 + 280 * (i%5) + 230, pixel * 3 + 45 + 362 * (i/5) + 120 + 320 };
