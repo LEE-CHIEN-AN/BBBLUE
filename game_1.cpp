@@ -290,7 +290,7 @@ int** mapArray; // 儲存地圖數據的陣列
 
 ///---------------------------
 
-int p1_character = 0, p2_character = 1;
+int p1_character = -1, p2_character = -1;
 
 int cnt_UpDown = 0;
 int cnt_LeftRight = 0;
@@ -341,36 +341,34 @@ wchar_t* upgradeDescriptions[NumDice] = {
     L"笑容攻擊!  骰子點數都+3",
     L"Laplace Transform  骰子點數都+3",
     L"LIFO  骰子點數都+3",
-    L"要做Assignment3喔~  一面骰子點數+3",
-    L"隨便寫都比你強!  一面骰子點數+3",
-    L"(你笨選到這個)  一面骰子點數+3",
-    L"午餐我來了!  一面骰子點數+3"
+    L"要做Assignment3喔  一面點數+3",
+    L"隨便寫都比你強!  一面點數+3",
+    L"(你笨選到這個)  一面點數+3",
+    L"午餐我來了!  一面點數+3"
 };
-/*
-    characters[0] = new Teacher("小傑老師", 1, 2, 3, 4, 5, 6, "PDOGS!", 15);
-    characters[1] = new Teacher("莊老師", 3, 3, 3, 4, 4, 4, "莊大刀!", 32);
-    characters[2] = new Teacher("建錦主任", 1, 1, 1, 3, 5, 10, "笑容攻擊!", 21);
-    characters[3] = new Teacher("國榮老師", 1, 1, 3, 4, 6, 6, "Laplace Transform", 17);
-    characters[4] = new Teacher("尤老師", 2, 2, 2, 3, 6, 6, "LIFO", 24);
-
-    characters[5] = new Student("會計助教", 1, 2, 3, 4, 5, 6, "要做Assignment3喔~", 99);
-    characters[6] = new Student("程設助教", 3, 3, 3, 4, 4, 4, "隨便寫都比你強!", 88);
-    characters[7] = new Student("大笨鳥", 2, 2, 2, 3, 6, 6, "(你笨選到這個)", 32);
-    characters[8] = new Student("醉月湖大鵝", 1, 1, 1, 3, 5, 10, "午餐我來了!", 67);
-*/
-
 
 const int NumCharacters = 9;
+const wchar_t* characterName[NumCharacters] = {
+    L"小傑老師",
+    L"莊老師",
+    L"建錦主任",
+    L"國榮老師",
+    L"尤老師",
+    L"會計助教",
+    L"程設助教",
+    L"大笨鳥",
+    L"醉月湖大鵝"
+};
 const wchar_t* characterDescriptions[NumCharacters] = {
-    L"小傑老師，動漫愛好者，擁有兩大神獸 pcats 和 pdogs 在手，帶你進入 c++ 世界。",
-    L"莊老師，嚴肅評論家，點評毫不留情，是你成長路上的嚴格導師。",
-    L"建錦主任，常關心同學的主任，笑臉下的犀利點評，讓你感受溫暖與挑戰。",
-    L"國榮老師，突如其來的日語和 diss，將讓你在笑聲中學到更多。",
-    L"尤老師，有什麼比松鼠還要聒噪，喜歡粉紅色的那個女人。",
-    L"會計助教，英雄般的救星，從全英會計課中拯救你，讓你脫離困境。",
-    L"程設助教，為你指點迷津，幫你跳出 TLE、RE、MLE、WA 惡夢的那群英雄。",
-    L"大笨鳥，亂飛亂拉屎，為你帶來校園的不可預測性。",
-    L"醉月湖大鵝，湖邊的驚喜，當心這位校園生物，或許會給你一場驚喜的午餐體驗。"
+    L"動漫愛好者，擁有兩大神獸 pcats 和 pdogs 在手，帶你進入 c++ 世界。",
+    L"嚴肅評論家，點評毫不留情，是你成長路上的嚴格導師。",
+    L"常關心同學的主任，笑臉下的犀利點評，讓你感受溫暖與挑戰。",
+    L"突如其來的日語和 diss，將讓你在笑聲中學到更多。",
+    L"有什麼比松鼠還要聒噪，喜歡粉紅色的那個女人。",
+    L"英雄般的救星，從全英會計課中拯救你，讓你脫離困境。",
+    L"為你指點迷津，幫你跳出 TLE、RE、MLE、WA 惡夢的那群英雄。",
+    L"亂飛亂拉屎，為你帶來校園的不可預測性。",
+    L"湖邊的驚喜，當心這位校園生物，或許會給你一場驚喜的午餐體驗。"
 };
 HICON characterIcon[NumCharacters] = {
     hIcon_CLJ,
@@ -428,12 +426,14 @@ int p1_upgradeTime = 0, p2_upgradeTime = 0;
 void printUpgrade(HWND hwnd)
 {
     HDC hdc = GetDC(hwnd);
+    HFONT hFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+    SelectObject(hdc, hFont);
     SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
     SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
     upgrade_p1 = upgradeDescriptions[p1_character];
     upgrade_p2 = upgradeDescriptions[p2_character];
-    for(int i = 0 ; i < p1_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 150 * (i+1), 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
-    for(int i = 0 ; i < p1_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 150 * (i+1), 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
+    for(int i = 0 ; i < p1_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 200 * (i+1) - 50, 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
+    for(int i = 0 ; i < p2_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 200 * (i+1) - 50, 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
 }
 
 void printOutAll(HWND hwnd)
@@ -496,6 +496,7 @@ void printOutAll(HWND hwnd)
     wchar_t* dice_p2;
     dice_p1 = diceDescriptions[p1_character];
     dice_p2 = diceDescriptions[p2_character];
+
     TextOutW(hdc, (Length + 2) * pixel + 10, 75, dice_p1, static_cast<int>(wcslen(dice_p1)));
     TextOutW(hdc, (Length + 2) * pixel + 10, 145, dice_p2, static_cast<int>(wcslen(dice_p2)));
     printUpgrade(hwnd);
@@ -718,10 +719,12 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
             case 7:
                 characters[p1_character]->upgrade();
                 p1_upgradeTime++;
+                HFONT hFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                SelectObject(hdc, hFont);
                 SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
                 SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
                 upgrade_p1 = upgradeDescriptions[p1_character];
-                TextOutW(hdc, (Length + 2) * pixel + 300, 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
+                for(int i = 0 ; i < p1_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 200 * (i+1) - 50, 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
                 break;
         }
         mapArray[y][x] = 1;
@@ -768,10 +771,12 @@ void DesAndOpt_p1(int x, int y, HWND hwnd)
                         characters[p1_character]->upgrade();
                         p1_upgradeTime++;
                         conditionText(1, 5, destinyCase, hwnd);
+                        HFONT hFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                        SelectObject(hdc, hFont);
                         SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
                         SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
                         upgrade_p1 = upgradeDescriptions[p1_character];
-                        TextOutW(hdc, (Length + 2) * pixel + 300, 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
+                        for(int i = 0 ; i < p1_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 200 * (i+1) - 50, 75, upgrade_p1, static_cast<int>(wcslen(upgrade_p1)));
                         break;
                 }
             }
@@ -818,10 +823,12 @@ void DesAndOpt_p2(int x, int y, HWND hwnd)
             case 7:
                 characters[p2_character]->upgrade();
                 p2_upgradeTime++;
+                HFONT hFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                SelectObject(hdc, hFont);
                 SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
                 SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
                 upgrade_p2 = upgradeDescriptions[p2_character];
-                TextOutW(hdc, (Length + 2) * pixel + 300, 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
+                for(int i = 0 ; i < p2_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 200 * (i+1) - 50, 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
                 break;
         }
         mapArray[y][x] = 1;
@@ -868,10 +875,12 @@ void DesAndOpt_p2(int x, int y, HWND hwnd)
                         characters[p2_character]->upgrade();
                         p2_upgradeTime++;
                         conditionText(2, 5, destinyCase, hwnd);
+                        HFONT hFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                        SelectObject(hdc, hFont);
                         SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
                         SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
                         upgrade_p2 = upgradeDescriptions[p2_character];
-                        TextOutW(hdc, (Length + 2) * pixel + 300, 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
+                        for(int i = 0 ; i < p2_upgradeTime ; i++) TextOutW(hdc, (Length + 2) * pixel + 200 * (i+1) - 50, 145, upgrade_p2, static_cast<int>(wcslen(upgrade_p2)));
                         break;
                 }
             }
@@ -1037,9 +1046,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 DrawIcon(hdc, LeftPixel+96, UpPixel+128, hIcon_rock);
 
                 SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
-                SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
-                wchar_t* nameTest = L"Made by 蕭翊璇 藍柏婷 柯絲昀 李捷安";
-                TextOutW(hdc, 550, 550, nameTest, static_cast<int>(wcslen(nameTest)));
+                SetTextColor(hdc, RGB(192, 192, 192));  // 設置白色文本顏色
+                HFONT hFont = CreateFont(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                SelectObject(hdc, hFont);
+                wchar_t* nameTest = L"Made by 資管一  蕭翊璇 藍柏婷 柯絲昀 李捷安";
+                TextOutW(hdc, 520, 550, nameTest, static_cast<int>(wcslen(nameTest)));
 
                 currentCharacter = 0;
                 text = L"Press Enter to continue...";
@@ -1065,25 +1076,45 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     DrawIcon(hdc, screenWidth-pixel, j * pixel, hIcon_rock);
                 }
 
-                SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
-                SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
-                HFONT hFont = CreateFont(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
-                SelectObject(hdc, hFont);
-                wchar_t* firstTest = L"選擇你的角色，開啟冒險對戰！";
-                TextOutW(hdc, pixel + 15, pixel + 20, firstTest, static_cast<int>(wcslen(firstTest)));
-                for(int i = 0 ; i < NumCharacters ; i++)
+
+                for (int i = 0; i <= screenWidth/pixel; i++)
                 {
-                    DrawIcon(hdc, 50, 100 + i * (pixel+30), characterIcon[i]);
-                    TextOutW(hdc, 100, 100 + i * (pixel+30) + 5, characterDescriptions[i], static_cast<int>(wcslen(characterDescriptions[i])));
+                    DrawIcon(hdc, i * pixel, 96, hIcon_rock);
+                    DrawIcon(hdc, i * pixel, 460, hIcon_rock);
+                }
+                for (int j = 3; j <= screenHeight/pixel; j++)
+                {
+                    for(int k = 1 ; k < 5 ; k++)
+                    {
+                        DrawIcon(hdc, 280 * k, j * pixel, hIcon_rock);
+                    }
                 }
 
-//                RECT rect = {10, 800, 600, 900}; // 指定文本绘制的区域 (left, top, right, bottom)
-//                wchar_t* text = L"這是使用粗體的文本，這段文本會在指定的區域內自動換行。";
-//
-//                DrawTextW(hdc, text, -1, &rect, DT_WORDBREAK);
+                // 绘制背景
+                SetBkColor(hdc, RGB(0, 0, 0));
+                SetTextColor(hdc, RGB(255, 255, 255));
+                HFONT hFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                SelectObject(hdc, hFont);
+
+                wchar_t* firstTest = L"選擇你的角色，開啟冒險對戰！";
+                TextOutW(hdc, pixel + 15, pixel + 20, firstTest, static_cast<int>(wcslen(firstTest)));
+                wchar_t* choose = L"請依序選擇 1 ~ 9 角色";
+                TextOutW(hdc, 1165, 510, choose, static_cast<int>(wcslen(choose)));
+
+                // 繪製9個介紹框
+                for (int i = 0; i < NumCharacters; i++)
+                {
+                    DrawIcon(hdc, pixel + 10 + 280 * (i%5), pixel * 3 + 45 + 362 * (i/5), characterIcon[i]);   // 繪製icon
+                    TextOutW(hdc, pixel + 10 + 280 * (i%5) + 50, pixel * 3 + 45 + 362 * (i/5) + 5, characterName[i], static_cast<int>(wcslen(characterName[i]))); // 輸出名稱
+                    wchar_t* characteristic = L"屬性 : ";
+                    TextOutW(hdc, pixel + 10 + 280 * (i%5), pixel * 3 + 45 + 362 * (i/5) + 55, characteristic, static_cast<int>(wcslen(characteristic))); // 屬性
+                    TextOutW(hdc, pixel + 10 + 280 * (i%5) + 60, pixel * 3 + 45 + 362 * (i/5) + 55, diceDescriptions[i], static_cast<int>(wcslen(diceDescriptions[i]))); // 輸出屬性
+                    RECT textRect = { pixel + 10 + 280 * (i%5), pixel * 3 + 45 + 362 * (i/5) + 120, pixel + 10 + 280 * (i%5) + 230, pixel * 3 + 45 + 362 * (i/5) + 120 + 320 };
+                    DrawTextW(hdc, characterDescriptions[i], -1, &textRect, DT_WORDBREAK | DT_LEFT | DT_VCENTER); // 輸出文字
+                }
 
                 currentCharacter = 0;
-                text = L"Press Enter to start...";
+                text = L"    Press Enter to start...";
                 SetTimer(hwnd, 1, 30, NULL);
                 //KillTimer(hwnd, 1);
             }
@@ -1122,6 +1153,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 isLogo = true;
                 InvalidateRect(hwnd, NULL, TRUE); // 通知窗口需要重新繪製
             }
+
+            // 按鍵被按下時的處理
+            else if (wParam >= '1' && wParam <= '9' && isLogo == true && isGameStarted == false)
+            {
+                SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+                SetTextColor(hdc, RGB(255, 255, 255));  // 設置白色文本顏色
+                HFONT hFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+                SelectObject(hdc, hFont);
+                int key = wParam - '0';
+                if (p1_character == -1) // 如果 p1 還未選擇角色
+                {
+                    p1_character = key - 1;
+                    wchar_t buffer[20];
+                    swprintf_s(buffer, L"player1選擇的角色 : %d", p1_character+1);
+                    TextOutW(hdc, 1165, 550, buffer, static_cast<int>(wcslen(buffer)));
+                }
+                else if (p2_character == -1) // 如果 p1 已選，p2 還未選擇角色
+                {
+                    p2_character = key - 1;
+                    wchar_t buffer[20];
+                    swprintf_s(buffer, L"player2選擇的角色 : %d", p2_character+1);
+                    TextOutW(hdc, 1165, 590, buffer, static_cast<int>(wcslen(buffer)));
+                }
+                ReleaseDC(hwnd, hdc);  // 释放窗口设备上下文
+                DeleteObject(hFont);   // 释放字体对象
+            }
+
             else if(wParam == VK_RETURN && isLogo == true && isGameStarted == false) { // 假設 Enter 鍵啟動遊戲
                 isGameStarted = true;
                 InvalidateRect(hwnd, NULL, TRUE); // 通知窗口需要重新繪製
