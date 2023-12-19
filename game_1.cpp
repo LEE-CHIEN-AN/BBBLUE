@@ -8,7 +8,7 @@
 #include <string>
 using namespace std;
 
-int Length = 20, Width = 10; // 定義地圖的長度和寬度
+int Length = 20, Width = 15; // 定義地圖的長度和寬度
 HICON hIcon_player1 = (HICON)LoadImage(NULL, L"JNG (2).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 HICON hIcon_player2 = (HICON)LoadImage(NULL, L"HCR (2).ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
 HICON hIcon_grass = (HICON)LoadImage(NULL, L"grass_try.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
@@ -1384,12 +1384,8 @@ int main()
 
     ///--------------------------------
 
-//    //建立地圖
-//    TileMap myTileMap(Length + 1, Width + 1);
-
     //建立地圖
     TileMap<TileType> myTileMap(Length + 1, Width + 1);
-    //TileMap<TileType> chanceMap(width, length);
     //初始化地圖為草地
     for (int i = 1; i <= Width; i++) {
         for (int j = 1; j <= Length; j++) {
@@ -1413,8 +1409,8 @@ int main()
     //加入命運
     int fateCnt = generateRandomNumber(static_cast<int>((Length * Width) * 0.02),
                                       static_cast<int>((Length * Width) * 0.05));
-    //cout << rockCnt << endl;
-    myTileMap.randomRocks(rockCnt);
+
+    myTileMap.randomTiles(rockCnt, ROCK);
     myTileMap.randomTiles(oppCnt, OPPORTUNITY);
     myTileMap.randomTiles(fateCnt, FATE);
 
@@ -1454,15 +1450,6 @@ int main()
                 }
             }
         }
-//    //Test
-//    //mapArray[4][4] = 4;
-//    mapArray[5][5] = 5;
-//    mapArray[3][4] = 5;
-//    mapArray[3][6] = 5;
-//    mapArray[3][8] = 5;
-//    mapArray[6][7] = 5;
-//    mapArray[6][3] = 5;
-//    mapArray[8][2] = 5;
     for (int i = 1; i <= Width; i++) {
             for (int j = 1; j <= Length; j++) {
                 cout << mapArray[i][j] << " ";
