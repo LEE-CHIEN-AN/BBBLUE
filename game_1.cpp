@@ -314,7 +314,7 @@ int currentCharacter = 0;
 
 bool isGameStarted = false;
 bool isLogo = false;
-
+bool isGameFinished = false;
 double moveChange_p1 = 1, moveChange_p2 = 1;
 
 wchar_t* stepText_p1;
@@ -940,6 +940,181 @@ void UpDownLeftRight(int player, HWND hwnd)
     }
 }
 
+void winner(HWND hwnd)
+{
+    if(!isGameFinished)
+    {
+        HDC hdc = GetDC(hwnd);
+        ShowCursor(TRUE);
+        // 設置黑色背景
+        RECT clientRect;
+        GetClientRect(hwnd, &clientRect);
+        FillRect(hdc, &clientRect, blackBrush);
+
+        int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+        int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+        for (int i = 0; i <= screenWidth/pixel; i++)
+        {
+            DrawIcon(hdc, i * pixel, 0, hIcon_rock);
+            DrawIcon(hdc, i * pixel, screenHeight-pixel, hIcon_rock);
+        }
+        for (int j = 0; j <= screenHeight/pixel; j++)
+        {
+            DrawIcon(hdc, 0, j * pixel, hIcon_rock);
+            DrawIcon(hdc, screenWidth-pixel, j * pixel, hIcon_rock);
+        }
+        // Determine the winner (you need to have some way to track scores or conditions)
+        if (currentPlayer == 1)
+        {
+            int LeftPixel = 200, UpPixel = 350; //P
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+
+            LeftPixel = 350; UpPixel = 350; //L
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            for(int i = 0; i < 3; i++)DrawIcon(hdc, LeftPixel+32*i, UpPixel+128, hIcon_rock);
+
+            LeftPixel = 500-32; UpPixel = 350; //A
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            for(int i = 1; i < 5; i++)
+            {
+                DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+32*i, hIcon_rock);
+            }
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+
+
+            LeftPixel = 650-32; UpPixel = 350; //Y
+            for(int i = 2; i < 5; i++)
+            {
+                DrawIcon(hdc, LeftPixel+64, UpPixel+32*i, hIcon_rock);
+            }
+            DrawIcon(hdc, LeftPixel, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+128, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+
+            LeftPixel = 800; UpPixel = 350; //E
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+128, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+128, hIcon_rock);
+
+            LeftPixel = 950; UpPixel = 350;  //R
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+96, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+128, hIcon_rock);
+
+            LeftPixel = 1100; UpPixel = 350; //1
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel+64, UpPixel+32*i, hIcon_rock);
+            //DrawIcon(hdc, LeftPixel, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+128, hIcon_rock);
+
+            SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+            SetTextColor(hdc, RGB(192, 192, 192));  // 設置白色文本顏色
+            HFONT hFont = CreateFont(40, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+            SelectObject(hdc, hFont);
+            wchar_t* nameTest = L"WINNER !!!";
+            TextOutW(hdc, 630, 550, nameTest, static_cast<int>(wcslen(nameTest)));
+            isGameFinished = true;
+        }
+        else if (currentPlayer == 2)
+        {
+            int LeftPixel = 200, UpPixel = 350; //P
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+
+            LeftPixel = 350; UpPixel = 350; //L
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            for(int i = 0; i < 3; i++)DrawIcon(hdc, LeftPixel+32*i, UpPixel+128, hIcon_rock);
+
+            LeftPixel = 500-32; UpPixel = 350; //A
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            for(int i = 1; i < 5; i++)
+            {
+                DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+                DrawIcon(hdc, LeftPixel+96, UpPixel+32*i, hIcon_rock);
+            }
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+
+
+            LeftPixel = 650-32; UpPixel = 350; //Y
+            for(int i = 2; i < 5; i++)
+            {
+                DrawIcon(hdc, LeftPixel+64, UpPixel+32*i, hIcon_rock);
+            }
+            DrawIcon(hdc, LeftPixel, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+128, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+
+            LeftPixel = 800; UpPixel = 350; //E
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+128, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+128, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+128, hIcon_rock);
+
+            LeftPixel = 950; UpPixel = 350;  //R
+            for(int i = 0; i < 5; i++) DrawIcon(hdc, LeftPixel, UpPixel+32*i, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+96, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+128, hIcon_rock);
+
+            LeftPixel = 1100+50-32; UpPixel = 350; //2
+            DrawIcon(hdc, LeftPixel, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+96, UpPixel+32, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+64, UpPixel+64, hIcon_rock);
+            DrawIcon(hdc, LeftPixel+32, UpPixel+96, hIcon_rock);
+            for(int i = 0; i < 4; i++) DrawIcon(hdc, LeftPixel+i*32, UpPixel+128, hIcon_rock);
+
+            SetBkColor(hdc, RGB(0, 0, 0));  // 設置黑色背景顏色
+            SetTextColor(hdc, RGB(192, 192, 192));  // 設置白色文本顏色
+            HFONT hFont = CreateFont(40, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
+            SelectObject(hdc, hFont);
+            wchar_t* nameTest = L"WINNER !!!";
+            TextOutW(hdc, 630, 550, nameTest, static_cast<int>(wcslen(nameTest)));
+            isGameFinished = true;
+        }
+    }
+}
+
 #pragma region WindowProc
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1049,7 +1224,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 SetTextColor(hdc, RGB(192, 192, 192));  // 設置白色文本顏色
                 HFONT hFont = CreateFont(25, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft JhengHei");
                 SelectObject(hdc, hFont);
-                wchar_t* nameTest = L"Made by 資管一  蕭翊璇 藍柏婷 柯絲昀 李捷安";
+                wchar_t* nameTest = L"Made by 資管一  蕭翊璇 藍柏婷 柯絲昀 李倢安";
                 TextOutW(hdc, 520, 550, nameTest, static_cast<int>(wcslen(nameTest)));
 
                 currentCharacter = 0;
@@ -1248,6 +1423,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
                 if(p1_moves <= 0) // 當p1是0步時，要再多按一下
                 {
+                    if(p1_x == p2_x && p1_y == p2_y) winner(hwnd);
                     currentPlayer = 2;
                     for(int i = 0 ; i < p2_moves ; i++)
                     {
@@ -1310,50 +1486,50 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
                 if(p2_moves <= 0)
                 {
-                    // Switch turns after a move
-                    isInitialDrawDone = 0;
-                    // Reset moves for the next player
-
-                    p1_moves = characters[p1_character]->getDiceNum() * moveChange_p1;
-                    p2_moves = characters[p2_character]->getDiceNum() * moveChange_p2;
-
-                    printOutAll(hwnd);
-
-                    currentPlayer = 1;
-                    if(moveChange_p1 == 0)
+                    if(p1_x == p2_x && p1_y == p2_y) winner(hwnd);
+                    else
                     {
-                        currentPlayer = 2;
-                        for(int i = 0 ; i < p2_moves ; i++)
-                        {
-                            DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 110, hIcon_player2);
-                        }
-                    }
+                        // Switch turns after a move
+                        isInitialDrawDone = 0;
+                        // Reset moves for the next player
 
-                    moveChange_p1 = 1;
-                    moveChange_p2 = 1;
+                        p1_moves = characters[p1_character]->getDiceNum() * moveChange_p1;
+                        p2_moves = characters[p2_character]->getDiceNum() * moveChange_p2;
 
-                    for(int i = 1 ; i <= Width ; i++)
-                    {
-                        for(int j = 1 ; j <= Length ; j++)
+                        printOutAll(hwnd);
+
+                        currentPlayer = 1;
+                        if(moveChange_p1 == 0)
                         {
-                            if(mapArray[i][j] == 1 || mapArray[i][j] == 4 || mapArray[i][j] == 5)
+                            currentPlayer = 2;
+                            for(int i = 0 ; i < p2_moves ; i++)
                             {
-                                passing_arr_p1[i][j] = 0;
-                                passing_arr_p2[i][j] = 0;
+                                DrawIcon(hdc, (Length + 5) * pixel + i * pixel, 110, hIcon_player2);
                             }
                         }
-                    }
 
-                    passing_arr_p1[p1_y][p1_x] = 1;
-                    passing_arr_p2[p2_y][p2_x] = 1;
+                        moveChange_p1 = 1;
+                        moveChange_p2 = 1;
+
+                        for(int i = 1 ; i <= Width ; i++)
+                        {
+                            for(int j = 1 ; j <= Length ; j++)
+                            {
+                                if(mapArray[i][j] == 1 || mapArray[i][j] == 4 || mapArray[i][j] == 5)
+                                {
+                                    passing_arr_p1[i][j] = 0;
+                                    passing_arr_p2[i][j] = 0;
+                                }
+                            }
+                        }
+
+                        passing_arr_p1[p1_y][p1_x] = 1;
+                        passing_arr_p2[p2_y][p2_x] = 1;
+                    }
                 }
             }
 
-            if (p1_x == p2_x && p1_y == p2_y)
-            {
-                ShowCursor(TRUE);
-                PostQuitMessage(0); // 結束程序
-            }
+            if(p1_x == p2_x && p1_y == p2_y) winner(hwnd);
             ReleaseDC(hwnd, hdc);
             break;
         }
